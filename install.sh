@@ -60,14 +60,14 @@ run_pre_install() {
 __get_pass() {
   for i in $(seq 1 20); do
     if [ "$(docker inspect -f "{{.State.Health.Status}}" $APPNAME)" == "healthy" ]; then
-      echo -e "$(docker logs $APPNAME 2>/dev/null | grep 'password:' | grep '^')"
+      SERVER_MESSAGE_PASS="$(echo -e "$(docker logs $APPNAME 2>/dev/null | grep 'password:' | grep '^')")"
       return 0
     else
       sleep 3
     fi
 
     if [ $i -eq 20 ]; then
-      echo -e "Timed out waiting for $APPNAME to start, consult your container logs for more info: docker logs $APPNAME"
+      SERVER_MESSAGE_PASS="$(echo -e "Timed out waiting for $APPNAME to start, consult your container logs for more info: docker logs $APPNAME")"
       return 1
     fi
   done
@@ -240,10 +240,17 @@ else
     --hostname "$SERVER_HOST" \
     --restart=always \
     --privileged \
+    --dns=127.0.0.1 \
+    --dns=1.1.1.1 \
     -e TZ="$SERVER_TIMEZONE" \
-    -v $LOCAL_DATA_DIR:/app/data \
-    -v $LOCAL_CONFIG_DIR:/app/config \
-    -p $SERVER_LISTEN:$SERVER_PORT_EXT:$SERVER_PORT_INT \
+    -e VIRTUAL_HOST="$SERVER_HOST" \
+    -e PROXY_LOCATION="$SERVER_HOST" \
+    -e FTLCONF_LOCAL_IPV4="127.0.0.1" \
+    -v $LOCAL_DATA_DIR:/data \
+    -v $LOCAL_CONFIG_DIR/pihole:/etc/pihole \
+    -v $LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d \
+    -p $SERVER_PORT_EXT:$SERVER_PORT_INT \
+    -p $SERVER_PORT_ADMIN_EXT:$SERVER_PORT_ADMIN_INT \
     "$HUB_URL" &>/dev/null
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -281,7 +288,7 @@ run_postinst() {
 execute "run_postinst" "Running post install scripts"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Output post install message
-
+__get_pass
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # create version file
 dockermgr_install_version
