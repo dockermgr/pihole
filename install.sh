@@ -58,16 +58,16 @@ run_pre_install() {
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __get_pass() {
+  local i=""
   for i in $(seq 1 20); do
     if [ "$(docker inspect -f "{{.State.Health.Status}}" $APPNAME)" == "healthy" ]; then
-      SERVER_MESSAGE_PASS="$(echo -e "$(docker logs $APPNAME 2>/dev/null | grep 'password:' | grep '^')")"
+      SERVER_MESSAGE_PASS="$(docker logs $APPNAME 2>&1 | grep 'random' | grep 'password:' | awk -F': ' '{print $2}' | grep '^')"
       return 0
     else
       sleep 3
     fi
-
     if [ $i -eq 20 ]; then
-      SERVER_MESSAGE_PASS="$(echo -e "Timed out waiting for $APPNAME to start, consult your container logs for more info: docker logs $APPNAME")"
+      SERVER_MESSAGE_PASS="Timed out waiting for $APPNAME to start, consult your container logs for more info: docker logs $APPNAME"
       return 1
     fi
   done
