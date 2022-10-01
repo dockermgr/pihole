@@ -9,11 +9,11 @@
 # @@Copyright        :  Copyright: (c) 2022 Jason Hempstead, Casjays Developments
 # @@Created          :  Friday, Sep 30, 2022 23:36 EDT
 # @@File             :  install.sh
-# @@Description      :  
+# @@Description      :
 # @@Changelog        :  New script
 # @@TODO             :  Better documentation
-# @@Other            :  
-# @@Resource         :  
+# @@Other            :
+# @@Resource         :
 # @@Terminal App     :  no
 # @@sudo/root        :  no
 # @@Template         :  installers/dockermgr
@@ -55,6 +55,22 @@ fi
 run_pre_install() {
 
   return ${?:-0}
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__get_pass() {
+  for i in $(seq 1 20); do
+    if [ "$(docker inspect -f "{{.State.Health.Status}}" $APPNAME)" == "healthy" ]; then
+      echo -e "$(docker logs $APPNAME 2>/dev/null | grep 'password:' | grep '^')"
+      return 0
+    else
+      sleep 3
+    fi
+
+    if [ $i -eq 20 ]; then
+      echo -e "Timed out waiting for $APPNAME to start, consult your container logs for more info: docker logs $APPNAME"
+      return 1
+    fi
+  done
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define custom functions
@@ -130,10 +146,10 @@ NGINX_HTTPS="${NGINX_HTTPS:-443}"
 NGINX_PORT="${NGINX_HTTPS:-$NGINX_HTTP}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Port Setup [ _INT is container port ] [ _EXT is docker ]
-SERVER_PORT_EXT="${SERVER_PORT_EXT:-}"
-SERVER_PORT_INT="${SERVER_PORT_INT:-}"
-SERVER_PORT_ADMIN_EXT="${SERVER_PORT_ADMIN_EXT:-}"
-SERVER_PORT_ADMIN_INT="${SERVER_PORT_ADMIN_INT:-}"
+SERVER_PORT_EXT="${SERVER_PORT_EXT:-53}"
+SERVER_PORT_INT="${SERVER_PORT_INT:-53}"
+SERVER_PORT_ADMIN_EXT="${SERVER_PORT_ADMIN_EXT:-19080}"
+SERVER_PORT_ADMIN_INT="${SERVER_PORT_ADMIN_INT:-80}"
 SERVER_PORT_OTHER_EXT="${SERVER_PORT_OTHER_EXT:-}"
 SERVER_PORT_OTHER_INT="${SERVER_PORT_OTHER_INT:-}"
 SERVER_WEB_PORT="${SERVER_WEB_PORT:-$SERVER_PORT}"
@@ -147,7 +163,7 @@ SERVER_MESSAGE_PASS=""
 SERVER_MESSAGE_POST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # URL to container image [docker pull URL]
-HUB_URL="hello-world"
+HUB_URL="pihole/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # import global variables
 if [ -f "$APPDIR/env.sh" ] && [ ! -f "$DOCKERMGR_HOME/env/$APPNAME" ]; then
