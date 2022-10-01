@@ -61,8 +61,7 @@ __get_pass() {
   local i=""
   for i in $(seq 1 20); do
     if [ "$(docker inspect -f "{{.State.Health.Status}}" $APPNAME)" == "healthy" ]; then
-      SERVER_MESSAGE_PASS="$(docker logs $APPNAME 2>&1 | grep 'random' | grep 'password:' | awk -F': ' '{print $2}' | grep '^')"
-      return 0
+      SERVER_MESSAGE_PASS="$(docker logs $APPNAME 2>&1 | grep 'random' | grep 'password:' | awk -F': ' '{print $2}' | grep '^' && echo 'Password' || echo 'Password seems to be set')"
     else
       sleep 3
     fi
@@ -71,6 +70,10 @@ __get_pass() {
       return 1
     fi
   done
+  if [ "$SERVER_MESSAGE_PASS" = "Password" ]; then
+    dockermgr -- enter $APPNAME pihole -a -p
+  fi
+  return 0
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define custom functions
