@@ -243,16 +243,21 @@ else
     --hostname "$SERVER_HOST" \
     --restart=always \
     --privileged \
+    --cap-add=NET_ADMIN \
     --dns=127.0.0.1 \
     --dns=1.1.1.1 \
     -e TZ="$SERVER_TIMEZONE" \
-    -e VIRTUAL_HOST="$SERVER_HOST" \
-    -e PROXY_LOCATION="$SERVER_HOST" \
+    -e VIRTUAL_HOST="$HOSTNAME" \
+    -e PROXY_LOCATION="$HOSTNAME" \
     -e FTLCONF_LOCAL_IPV4="127.0.0.1" \
+    -e WEBTHEME="dark" \
+    -e SOCKET_LISTENING="all" \
+    -e DBIMPORT="yes" \
     -v $LOCAL_DATA_DIR:/data \
     -v $LOCAL_CONFIG_DIR/pihole:/etc/pihole \
     -v $LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d \
-    -p $SERVER_PORT_EXT:$SERVER_PORT_INT \
+    -p $SERVER_PORT_EXT:$SERVER_PORT_INT/tcp \
+    -p $SERVER_PORT_EXT:$SERVER_PORT_INT/udp \
     -p $SERVER_PORT_ADMIN_EXT:$SERVER_PORT_ADMIN_INT \
     "$HUB_URL" &>/dev/null
 fi
