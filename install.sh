@@ -225,7 +225,7 @@ ADDITIONAL_MOUNTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional variables [ myvar=var ]
 ADDITION_ENV="WEBTHEME=default-dark DNS_FQDN_REQUIRED=true FTLCONF_LOCAL_IPV4=127.0.0.1 "
-ADDITION_ENV+="IPv6=true DHCP_IPv6=true TEMPERATUREUNIT=f SOCKET_LISTENING=all DNSMASQ_LISTENING=all WEB_PORT=19080"
+ADDITION_ENV+="IPv6=true DHCP_IPv6=true TEMPERATUREUNIT=f SOCKET_LISTENING=all DNSMASQ_LISTENING=all WEB_PORT=80 "
 ADDITION_ENV+="VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME} PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME} PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME} "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional devices [ /dev:/dev ]
@@ -245,7 +245,7 @@ CONTAINER_HTTP_PROTO="http"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add service port [port] or [port:port] - LISTEN will be added if defined [DEFINE_LISTEN]
 # Only ONE HTTP or HTTPS if web server or SERVICE port for mysql pgsql ftp etc. add more to CONTAINER_ADD_CUSTOM_PORT
-CONTAINER_HTTP_PORT="19080"
+CONTAINER_HTTP_PORT="19080:80"
 CONTAINER_HTTPS_PORT=""
 CONTAINER_SERVICE_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
