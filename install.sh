@@ -221,7 +221,7 @@ CONTAINER_LINK=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts [ /dir:/dir ]
 ADDITIONAL_MOUNTS="$LOCAL_CONFIG_DIR:/config:z $LOCAL_DATA_DIR:/data:z "
-ADDITIONAL_MOUNTS+=""
+ADDITIONAL_MOUNTS+="$LOCAL_CONFIG_DIR/pihole:/etc/pihole:z $LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d:z "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional variables [ myvar=var ]
 ADDITION_ENV="WEBTHEME=default-dark DNS_FQDN_REQUIRED=true FTLCONF_LOCAL_IPV4=127.0.0.1 "
