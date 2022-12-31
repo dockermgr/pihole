@@ -197,7 +197,7 @@ CONTAINER_GROUP_ID=""
 CONTAINER_USER_NAME="${PIHOLE_USERNAME:-} "
 CONTAINER_USER_PASS="${PIHOLE_PASSWORD:-}"
 CONTAINER_ENV_USER_NAME=""
-CONTAINER_ENV_PASS_NAME=""
+CONTAINER_ENV_PASS_NAME="WEBPASSWORD"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount docker socket [pathToSocket]
 DOCKER_SOCKET_ENABLED="no"
