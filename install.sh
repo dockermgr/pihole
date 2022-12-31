@@ -162,7 +162,7 @@ HOST_LOCAL_ONLY="no"
 LOCAL_IP="127.0.0.1"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to 0.0.0.0 to listen on all or specify addresses
-DEFINE_LISTEN=""
+DEFINE_LISTEN="0.0.0.0"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set the network type - bridge,host - default is bridge
 HOST_NETWORK_TYPE="bridge"
@@ -225,8 +225,8 @@ ADDITIONAL_MOUNTS+="$LOCAL_CONFIG_DIR/pihole:/etc/pihole:z $LOCAL_CONFIG_DIR/dns
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional variables [ myvar=var ]
 ADDITION_ENV="WEBTHEME=default-dark DNS_FQDN_REQUIRED=true FTLCONF_LOCAL_IPV4=$CURRIP4 "
-ADDITION_ENV+="IPv6=true DHCP_IPv6=true TEMPERATUREUNIT=f SOCKET_LISTENING=all "
-ADDITION_ENV+="PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME} "
+ADDITION_ENV+="IPv6=true DHCP_IPv6=true TEMPERATUREUNIT=f SOCKET_LISTENING=all DNSMASQ_LISTENING=all WEB_PORT=80 "
+ADDITION_ENV+="VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME} PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME} PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME} "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional devices [ /dev:/dev ]
 ADDITION_DEVICES=""
@@ -237,7 +237,7 @@ ADDITION_LABELS=""
 ADDITION_LABELS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional docker arguments - see docker run --help
-CUSTOM_ARGUMENTS="--dns=127.0.0.1 --dns=1.1.1.1 "
+CUSTOM_ARGUMENTS="--dns=150.230.183.65 --dns=1.1.1.1 "
 CUSTOM_ARGUMENTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to the protocol the the container will use [http,https,git,ftp,etc]
