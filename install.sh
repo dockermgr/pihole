@@ -237,7 +237,7 @@ ADDITION_LABELS=""
 ADDITION_LABELS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional docker arguments - see docker run --help
-CUSTOM_ARGUMENTS=""
+CUSTOM_ARGUMENTS="--dns=127.0.0.1 --dns=1.1.1.1 "
 CUSTOM_ARGUMENTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to the protocol the the container will use [http,https,git,ftp,etc]
@@ -250,7 +250,7 @@ CONTAINER_HTTPS_PORT=""
 CONTAINER_SERVICE_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add Add service port [port] or [port:port] - LISTEN will be added if defined [DEFINE_LISTEN]
-CONTAINER_ADD_CUSTOM_PORT="53:53/tcp 53:53/udp "
+CONTAINER_ADD_CUSTOM_PORT="53:53/tcp 53:53/udp 69:69/udp "
 CONTAINER_ADD_CUSTOM_PORT+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add Add service port [listen]:[externalPort:internalPort]/[tcp,udp]
