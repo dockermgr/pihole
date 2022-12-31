@@ -224,9 +224,9 @@ ADDITIONAL_MOUNTS="$LOCAL_CONFIG_DIR:/config:z $LOCAL_DATA_DIR:/data:z "
 ADDITIONAL_MOUNTS+="$LOCAL_CONFIG_DIR/pihole:/etc/pihole:z $LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d:z "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional variables [ myvar=var ]
-ADDITION_ENV="WEBTHEME=default-dark DNS_FQDN_REQUIRED=true FTLCONF_LOCAL_IPV4=127.0.0.1 "
-ADDITION_ENV+="IPv6=true DHCP_IPv6=true TEMPERATUREUNIT=f SOCKET_LISTENING=all DNSMASQ_LISTENING=all WEB_PORT=80 "
-ADDITION_ENV+="VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME} PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME} PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME} "
+ADDITION_ENV="WEBTHEME=default-dark DNS_FQDN_REQUIRED=true DNSMASQ_LISTENING=all WEB_PORT=80 "
+ADDITION_ENV+="IPv6=true DHCP_IPv6=true TEMPERATUREUNIT=f SOCKET_LISTENING=all "
+ADDITION_ENV+="PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME} "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional devices [ /dev:/dev ]
 ADDITION_DEVICES=""
