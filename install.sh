@@ -162,7 +162,7 @@ HOST_LOCAL_ONLY="no"
 LOCAL_IP="127.0.0.1"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to 0.0.0.0 to listen on all or specify addresses
-DEFINE_LISTEN="0.0.0.0"
+DEFINE_LISTEN=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set the network type - bridge,host - default is bridge
 HOST_NETWORK_TYPE="bridge"
