@@ -1,49 +1,66 @@
-## 👋 Welcome to pihole 🚀  
+## 👋 Welcome to README.md 🚀  
 
 pihole README  
   
   
-## Run container
+## Requires scripts to be installed  
 
 ```shell
-dockermgr update pihole
+ sudo bash -c "$(curl -q -LSsf "https://github.com/systemmgr/installer/raw/main/install.sh")"
+ systemmgr --config && systemmgr install scripts  
 ```
 
-### via command line
+## Automatic install/update  
 
 ```shell
-docker pull casjaysdevdocker/pihole:latest && \
+dockermgr update README.md
+```
+
+OR
+
+```shell
+mkdir -p "$HOME/.local/share/srv/docker/README.md/dataDir"
+git clone "https://github.com/dockermgr/README.md" "$HOME/.local/share/CasjaysDev/dockermgr/README.md"
+cp -Rfva "$HOME/.local/share/CasjaysDev/dockermgr/README.md/dataDir/." "$HOME/.local/share/srv/docker/README.md/dataDir/"
+```
+
+## via command line  
+
+```shell
+docker pull casjaysdevdocker/README.md:latest && \
 docker run -d \
 --restart always \
---name casjaysdevdocker-pihole \
---hostname casjaysdev-pihole \
+--privileged \
+--name casjaysdevdocker-README.md \
+--hostname casjaysdev-README.md \
 -e TZ=${TIMEZONE:-America/New_York} \
--v $HOME/.local/share/docker/storage/pihole/pihole/data:/data \
--v $HOME/.local/share/docker/storage/pihole/pihole/config:/config \
+-v $HOME/.local/share/srv/docker/README.md/dataDir/data:/data:z \
+-v $HOME/.local/share/srv/docker/README.md/dataDir/config:/config:z \
 -p 80:80 \
-casjaysdevdocker/pihole:latest
+casjaysdevdocker/README.md:latest
 ```
 
-### via docker-compose
+## via docker-compose  
 
 ```yaml
 version: "2"
 services:
-  pihole:
-    image: casjaysdevdocker/pihole
-    container_name: pihole
+  README.md:
+    image: casjaysdevdocker/README.md
+    container_name: README.md
     environment:
       - TZ=America/New_York
-      - HOSTNAME=casjaysdev-pihole
+      - HOSTNAME=casjaysdev-README.md
     volumes:
-      - $HOME/.local/share/docker/storage/pihole/data:/data:z
-      - $HOME/.local/share/docker/storage/pihole/config:/config:z
+      - $HOME/.local/share/srv/docker/README.md/dataDir/data:/data:z
+      - $HOME/.local/share/srv/docker/README.md/dataDir/config:/config:z
     ports:
       - 80:80
     restart: always
 ```
 
-## Authors  
+## Author  
 
 🤖 casjay: [Github](https://github.com/casjay) [Docker](https://hub.docker.com/r/casjay) 🤖  
-⛵ CasjaysDevdDocker: [Github](https://github.com/casjaysdev) [Docker](https://hub.docker.com/r/casjaysdevdocker) ⛵  
+📽 dockermgr: [Github](https://github.com/dockermgr) [Docker](https://hub.docker.com/r/dockermgr) 📽  
+⛵ CasjaysDev Docker: [Github](https://github.com/casjaysdevdocker) [Docker](https://hub.docker.com/r/casjaysdevdocker) ⛵  
