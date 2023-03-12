@@ -349,11 +349,11 @@ CONTAINER_SERVICES_LIST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container data dir [yes/no] [/data]
 CONTAINER_MOUNT_DATA_ENABLED="yes"
-CONTAINER_MOUNT_DATA_MOUNT_DIR="/etc/dnsmasq.d:z"
+CONTAINER_MOUNT_DATA_MOUNT_DIR="/etc/dnsmasq.d"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container config dir [yes/no] [/config]
 CONTAINER_MOUNT_CONFIG_ENABLED="yes"
-CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/etc/pihole:z"
+CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/etc/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts [/dir:/dir,/otherdir:/otherdir]
 CONTAINER_MOUNTS=""
@@ -1014,6 +1014,7 @@ EOF
     rm -Rf "${TMP:-/tmp}/$APPNAME.err.log"
     echo "$CONTAINER_NAME" >"$DOCKERMGR_CONFIG_DIR/containers/$APPNAME"
   else
+    [ -f "$DOCKERMGR_CONFIG_DIR/scripts/$CONTAINER_NAME" ] && rm -Rf "$DOCKERMGR_CONFIG_DIR/scripts/$CONTAINER_NAME"
     ERROR_LOG="true"
   fi
 fi
