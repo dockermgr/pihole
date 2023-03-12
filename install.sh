@@ -368,10 +368,10 @@ CONTAINER_ENV=""
 CONTAINER_ENV+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This will create the file in the containers filesystem mount:[/config/env]
-CONTAINER_ENV_FILE_ENABLED="yes"
+CONTAINER_ENV_FILE_ENABLED="no"
 CONTAINER_ENV_FILE_MOUNT="/config/env"
 CONTAINER_ENV_FILE_DOCKER_ARG=""
-CONTAINER_ENV_FILE_CONTAINER_ARG="--env "
+CONTAINER_ENV_FILE_CONTAINER_ARG=" "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set sysctl []
 CONTAINER_SYSCTL=""
