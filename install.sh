@@ -281,7 +281,7 @@ HOST_DOCKER_NETWORK="bridge"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set listen type - Default default all [all/local/lan/docker/public]
 HOST_NETWORK_ADDR="all"
-HOST_NETWORK_LOCAL_ADDR="127.0.0.1"
+HOST_NETWORK_LOCAL_ADDR="0.0.0.0"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to 0.0.0.0 to listen on all
 HOST_DEFINE_LISTEN="0.0.0.0"
@@ -304,7 +304,7 @@ CONTAINER_WEB_SERVER_AUTH_ENABLED="no"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add service port [port] or [port:port] - LISTEN will be added if defined [HOST_DEFINE_LISTEN] or HOST_NETWORK_ADDR=local
 # Only ONE of HTTP or HTTPS if web server or SERVICE port for mysql/pgsql/ftp/pgsql. add more to CONTAINER_ADD_CUSTOM_PORT
-CONTAINER_HTTP_PORT="80"
+CONTAINER_HTTP_PORT=""
 CONTAINER_HTTPS_PORT=""
 CONTAINER_SERVICE_PORT=""
 CONTAINER_ADD_CUSTOM_PORT=""
