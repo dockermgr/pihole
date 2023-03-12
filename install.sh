@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202303121641-git
+##@Version           :  202303121719-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Sunday, Mar 12, 2023 16:41 EDT
+# @@Created          :  Sunday, Mar 12, 2023 17:19 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -19,7 +19,7 @@
 # @@Template         :  installers/dockermgr
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202303121641-git"
+VERSION="202303121719-git"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
 RUN_USER="${SUDO_USER:-$USER}"
@@ -76,6 +76,29 @@ trap_exit
 # Require a certain version
 dockermgr_req_version "$APPVERSION"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Custom required functions
+__sudo() { sudo -n true && eval sudo "$*" || eval "$*" || return 1; }
+__port() { echo "$((50000 + $RANDOM % 1000))" | grep '^' || return 1; }
+__route() { [ -n "$(type -P ip)" ] && eval ip route 2>/dev/null || return 1; }
+__sudo_root() { sudo -n true && ask_for_password true && eval sudo "$*" || return 1; }
+__ifconfig() { [ -n "$(type -P ifconfig)" ] && eval ifconfig "$*" 2>/dev/null || return 1; }
+__docker_net_ls() { docker network ls 2>&1 | grep -v 'NETWORK ID' | awk -F ' ' '{print $2}'; }
+__password() { cat "/dev/urandom" | tr -dc '[0-9][a-z][A-Z]@$' | head -c${1:-14} && echo ""; }
+__docker_ps() { docker ps -a 2>&1 | grep -qs "$CONTAINER_NAME" && return 0 || return 1; }
+__name() { echo "$HUB_IMAGE_URL-${HUB_IMAGE_TAG:-latest}" | awk -F '/' '{print $(NF-1)"-"$NF}'; }
+__enable_ssl() { { [ "$SSL_ENABLED" = "yes" ] || [ "$SSL_ENABLED" = "true" ]; } && return 0 || return 1; }
+__ssl_certs() { [ -f "$HOST_SSL_CA" ] && [ -f "$HOST_SSL_CRT" ] && [ -f "$HOST_SSL_KEY" ] && return 0 || return 1; }
+__host_name() { hostname -f 2>/dev/null | grep '\.' | grep '^' || hostname -f 2>/dev/null | grep '^' || echo "$HOSTNAME"; }
+__domain_name() { hostname -f 2>/dev/null | awk -F '.' '{print $(NF-1)"."$NF}' | grep '\.' | grep '^' || hostname -f 2>/dev/null | grep '^' || return 1; }
+__port_in_use() { { [ -d "/etc/nginx/vhosts.d" ] && grep -wRsq "${1:-443}" "/etc/nginx/vhosts.d" || netstat -taupln 2>/dev/null | grep '[0-9]:[0-9]' | grep 'LISTEN' | grep -q "${1:-443}"; } && return 1 || return 0; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__docker_check() { [ -n "$(type -p docker 2>/dev/null)" ] || return 1; }
+__docker_init() { [ -n "$(type -p dockermgr 2>/dev/null)" ] && dockermgr init || printf_exit "Failed to Initialize the docker installer"; }
+__public_ip() { curl -q -LSsf "http://ifconfig.co" | grep -v '^$' | head -n1 | grep '^'; }
+__docker_gateway_ip() { sudo docker network inspect -f '{{json .IPAM.Config}}' ${HOST_DOCKER_NETWORK:-bridge} | jq -r '.[].Gateway' | grep -v '^$' | head -n1 | grep '^' || echo '172.17.0.1'; }
+__docker_net_create() { __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && return 0 || { docker network create -d bridge --attachable $HOST_DOCKER_NETWORK &>/dev/null && __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && echo "$HOST_DOCKER_NETWORK" && return 0 || return 1; }; }
+__local_lan_ip() { [ -n "$SET_LAN_IP" ] && (echo "$SET_LAN_IP" | grep -E '192\.168\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '10\.[0-255]\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '172\.[10-32]' | grep -v '172\.[10-15]' 2>/dev/null) | grep -v '172\.17' | grep -v '^$' | head -n1 | grep '^' || echo "$CURRENT_IP_4" | grep '^'; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Ensure docker is installed
 __docker_check || __docker_init
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -110,6 +133,24 @@ while :; do
   *) break ;;
   esac
 done
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Setup networking
+SET_LAN_DEV=$(__route | grep default | sed -e "s/^.*dev.//" -e "s/.proto.*//" | awk '{print $1}' | grep '^' || echo 'eth0')
+SET_LAN_IP=$(__ifconfig $SET_LAN_DEV | grep -w 'inet' | awk -F ' ' '{print $2}' | grep -vE '127\.[0-255]\.[0-255]\.[0-255]' | tr ' ' '\n' | head -n1 | grep '^' || echo '')
+SET_LAN_IP="${SET_LAN_IP:-$(__local_lan_ip)}"
+SET_DOCKER_IP="$(__docker_gateway_ip)"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# get variables from host
+SET_LOCAL_HOSTNAME=$(__host_name)
+SET_LOCAL_DOMAINNAME=$(__domain_name)
+SET_LONG_HOSTNAME=$(hostname -f 2>/dev/null | grep '^')
+SET_SHORT_HOSTNAME=$(hostname -s 2>/dev/null | grep '^')
+SET_DOMAIN_NAME=$(hostname -d 2>/dev/null | grep '^' || echo 'home')
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Set hostname and domain
+SET_HOST_SHORT_HOST="${SET_LOCAL_HOSTNAME:-$SET_SHORT_HOSTNAME}"
+SET_HOST_FULL_HOST="${SET_LOCAL_HOSTNAME:-$SET_LONG_HOSTNAME}"
+SET_HOST_FULL_DOMAIN="${SET_LOCAL_DOMAINNAME:-$SET_DOMAIN_NAME}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define folders
 HOST_DATA_DIR="$DATADIR/data"
@@ -238,7 +279,7 @@ CONTAINER_SERVICE_PORT=""
 CONTAINER_ADD_CUSTOM_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add service port [listen:externalPort:internalPort/[tcp,udp]]
-CONTAINER_ADD_CUSTOM_LISTEN="0.0.0.0:53:53/udp,0.0.0.0:53:53/tcp"
+CONTAINER_ADD_CUSTOM_LISTEN="0.0.0.0:53:53/tcp,0.0.0.0:53:53/udp"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to the protocol the the container will use [http/https/git/ftp/pgsql/mysql/mongodb]
 CONTAINER_HTTP_PROTO="http"
@@ -282,11 +323,11 @@ CONTAINER_SERVICES_LIST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container data dir [yes/no] [/data]
 CONTAINER_MOUNT_DATA_ENABLED="yes"
-CONTAINER_MOUNT_DATA_MOUNT_DIR=""
+CONTAINER_MOUNT_DATA_MOUNT_DIR="/etc/dnsmasq.d"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container config dir [yes/no] [/config]
 CONTAINER_MOUNT_CONFIG_ENABLED="yes"
-CONTAINER_MOUNT_CONFIG_MOUNT_DIR=""
+CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/etc/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts [/dir:/dir,/otherdir:/otherdir]
 CONTAINER_MOUNTS=""
@@ -313,11 +354,11 @@ CONTAINER_LABELS=""
 CONTAINER_LABELS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Specify container arguments - will run in container [/path/to/script]
-CONTAINER_COMMANDS="--dns=1.1.1.1 --dns=8.8.8.8"
+CONTAINER_COMMANDS=""
 CONTAINER_COMMANDS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional docker arguments - see docker run --help [--option arg1,--option2]
-DOCKER_CUSTOM_ARGUMENTS=""
+DOCKER_CUSTOM_ARGUMENTS="--dns=1.1.1.1 --dns=8.8.8.8"
 DOCKER_CUSTOM_ARGUMENTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Enable debugging [yes/no] [Eex]
@@ -375,28 +416,6 @@ EOF
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define extra functions
-__sudo() { sudo -n true && eval sudo "$*" || eval "$*" || return 1; }
-__port() { echo "$((50000 + $RANDOM % 1000))" | grep '^' || return 1; }
-__docker_check() { [ -n "$(type -p docker 2>/dev/null)" ] || return 1; }
-__route() { [ -n "$(type -P ip)" ] && eval ip route 2>/dev/null || return 1; }
-__sudo_root() { sudo -n true && ask_for_password true && eval sudo "$*" || return 1; }
-__ifconfig() { [ -n "$(type -P ifconfig)" ] && eval ifconfig "$*" 2>/dev/null || return 1; }
-__docker_net_ls() { docker network ls 2>&1 | grep -v 'NETWORK ID' | awk -F ' ' '{print $2}'; }
-__password() { cat "/dev/urandom" | tr -dc '[0-9][a-z][A-Z]@$' | head -c${1:-14} && echo ""; }
-__docker_ps() { docker ps -a 2>&1 | grep -qs "$CONTAINER_NAME" && return 0 || return 1; }
-__name() { echo "$HUB_IMAGE_URL-${HUB_IMAGE_TAG:-latest}" | awk -F '/' '{print $(NF-1)"-"$NF}'; }
-__enable_ssl() { { [ "$SSL_ENABLED" = "yes" ] || [ "$SSL_ENABLED" = "true" ]; } && return 0 || return 1; }
-__ssl_certs() { [ -f "$HOST_SSL_CA" ] && [ -f "$HOST_SSL_CRT" ] && [ -f "$HOST_SSL_KEY" ] && return 0 || return 1; }
-__host_name() { hostname -f 2>/dev/null | grep '\.' | grep '^' || hostname -f 2>/dev/null | grep '^' || echo "$HOSTNAME"; }
-__docker_init() { [ -n "$(type -p dockermgr 2>/dev/null)" ] && dockermgr init || printf_exit "Failed to Initialize the docker installer"; }
-__domain_name() { hostname -f 2>/dev/null | awk -F '.' '{print $(NF-1)"."$NF}' | grep '\.' | grep '^' || hostname -f 2>/dev/null | grep '^' || return 1; }
-__port_in_use() { { [ -d "/etc/nginx/vhosts.d" ] && grep -wRsq "${1:-443}" "/etc/nginx/vhosts.d" || netstat -taupln 2>/dev/null | grep '[0-9]:[0-9]' | grep 'LISTEN' | grep -q "${1:-443}"; } && return 1 || return 0; }
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-__public_ip() { curl -q -LSsf "http://ifconfig.co" | grep -v '^$' | head -n1 | grep '^'; }
-__docker_gateway_ip() { sudo docker network inspect -f '{{json .IPAM.Config}}' ${HOST_DOCKER_NETWORK:-bridge} | jq -r '.[].Gateway' | grep -v '^$' | head -n1 | grep '^' || echo '172.17.0.1'; }
-__docker_net_create() { __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && return 0 || { docker network create -d bridge --attachable $HOST_DOCKER_NETWORK &>/dev/null && __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && echo "$HOST_DOCKER_NETWORK" && return 0 || return 1; }; }
-__local_lan_ip() { [ -n "$SET_LAN_IP" ] && (echo "$SET_LAN_IP" | grep -E '192\.168\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '10\.[0-255]\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '172\.[10-32]' | grep -v '172\.[10-15]' 2>/dev/null) | grep -v '172\.17' | grep -v '^$' | head -n1 | grep '^' || echo "$CURRENT_IP_4" | grep '^'; }
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __rport() {
   local port
   port="$(__port)"
@@ -436,24 +455,6 @@ CONTAINER_COMMANDS="${CONTAINER_COMMANDS//  / }"
 CONTAINER_CAPABILITIES="${CONTAINER_CAPABILITIES//  / }"
 DOCKER_CUSTOM_ARGUMENTS="${DOCKER_CUSTOM_ARGUMENTS//  / }"
 CONTAINER_ADD_CUSTOM_PORT="${CONTAINER_ADD_CUSTOM_PORT//  / }"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Setup networking
-SET_LAN_DEV=$(__route | grep default | sed -e "s/^.*dev.//" -e "s/.proto.*//" | awk '{print $1}' | grep '^' || echo 'eth0')
-SET_LAN_IP=$(__ifconfig $SET_LAN_DEV | grep -w 'inet' | awk -F ' ' '{print $2}' | grep -vE '127\.[0-255]\.[0-255]\.[0-255]' | tr ' ' '\n' | head -n1 | grep '^' || echo '')
-SET_LAN_IP="${SET_LAN_IP:-$(__local_lan_ip)}"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# get variables from host
-SET_LOCAL_HOSTNAME=$(__host_name)
-SET_LOCAL_DOMAINNAME=$(__domain_name)
-SET_LONG_HOSTNAME=$(hostname -f 2>/dev/null | grep '^')
-SET_SHORT_HOSTNAME=$(hostname -s 2>/dev/null | grep '^')
-SET_DOMAIN_NAME=$(hostname -d 2>/dev/null | grep '^' || echo 'home')
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Set hostname and domain
-SET_DOCKER_IP="$(__docker_gateway_ip)"
-SET_HOST_SHORT_HOST="${SET_LOCAL_HOSTNAME:-$SET_SHORT_HOSTNAME}"
-SET_HOST_FULL_HOST="${SET_LOCAL_HOSTNAME:-$SET_LONG_HOSTNAME}"
-SET_HOST_FULL_DOMAIN="${SET_LOCAL_DOMAINNAME:-$SET_DOMAIN_NAME}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup arrays
 DOCKER_SET_PUBLISH=""
@@ -922,6 +923,7 @@ if [ "$CONTAINER_MOUNT_DATA_ENABLED" = "yes" ]; then
   if [ -z "$CONTAINER_MOUNT_DATA_MOUNT_DIR" ]; then
     CONTAINER_MOUNT_DATA_MOUNT_DIR="/data"
   fi
+  CONTAINER_MOUNT_DATA_MOUNT_DIR="${CONTAINER_MOUNT_DATA_MOUNT_DIR//:*/}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR:/$CONTAINER_MOUNT_DATA_MOUNT_DIR:z "
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -930,6 +932,7 @@ if [ "$CONTAINER_MOUNT_CONFIG_ENABLED" = "yes" ]; then
   if [ -z "$CONTAINER_MOUNT_CONFIG_MOUNT_DIR" ]; then
     CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/config"
   fi
+  CONTAINER_MOUNT_CONFIG_MOUNT_DIR="${CONTAINER_MOUNT_CONFIG_MOUNT_DIR//:*/}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR:/$CONTAINER_MOUNT_CONFIG_MOUNT_DIR:z "
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1087,13 +1090,18 @@ unset SET_SERVER_PORTS_TMP
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup custom ports
 if [ -n "$CONTAINER_ADD_CUSTOM_LISTEN" ]; then
+  SET_CUSTOM_PORTS=""
   for set_port in $CONTAINER_ADD_CUSTOM_LISTEN; do
     if [ "$port" != " " ] && [ -n "$port" ]; then
       port=$set_port
       echo "$port" | grep -q ':.*.:' || random_port="$(__rport)"
       echo "$port" | grep -q ':' || port="${random_port:-$port//\/*/}:$port"
-      DOCKER_SET_TMP_PUBLISH+=("--publish $port")
-      SET_CUSTOM_PORTS="$port "
+      TYPE="$(echo "$port" | grep '/' | awk -F '/' '{print $NF}' | head -n1 | grep '^' || echo '')"
+      if [ -z "$TYPE" ]; then
+        DOCKER_SET_TMP_PUBLISH+=("--publish $port")
+      else
+        DOCKER_SET_TMP_PUBLISH+=("--publish $port/$TYPE")
+      fi
     fi
   done
 fi
@@ -1147,8 +1155,6 @@ if [ -n "$NGINX_PROXY_PORT" ]; then
 else
   NGINX_PROXY_PORT="$CLEANUP_PORT"
 fi
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # SSL setup
 NGINX_PROXY_URL=""
@@ -1323,7 +1329,7 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps; then
     printf_yellow "This container does not have services configured"
   else
     printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
-    for service in $SET_PORT $SET_CUSTOM_PORTS; do
+    for service in $SET_PORT; do
       if [ "$service" != "--publish" ] && [ "$service" != " " ] && [ -n "$service" ]; then
         service=${service//\/*/}
         set_listen=${service%:*}
@@ -1395,14 +1401,25 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps; then
     printf_purple "Password:                       ${SET_USER_PASS:-toor}"
     printf_purple "htpasswd File:                  /config/auth/htpasswd"
   fi
-  [ -z "$POST_SHOW_FINISHED_MESSAGE" ] || printf_green "$POST_SHOW_FINISHED_MESSAGE"
+  if [ -n "$POST_SHOW_FINISHED_MESSAGE" ]; then
+    printf_green "$POST_SHOW_FINISHED_MESSAGE"
+  fi
   __show_post_message
 else
   printf_cyan "The container $CONTAINER_NAME seems to have failed"
-  [ "$ERROR_LOG" = "true" ] && printf_yellow "Errors logged to ${TMP:-/tmp}/$APPNAME.err.log"
-  printf_error "Something seems to have gone wrong with the install"
+  if [ "$ERROR_LOG" = "true" ]; then
+    printf_yellow "Errors logged to ${TMP:-/tmp}/$APPNAME.err.log"
+  else
+    printf_red "Something seems to have gone wrong with the install"
+  fi
+  if [ -f "$DOCKERMGR_CONFIG_DIR/scripts/$CONTAINER_NAME" ]; then
+    printf_yellow "Script: $DOCKERMGR_CONFIG_DIR/scripts/$CONTAINER_NAME"
+  fi
+  exit 10
 fi
-[ "$MESSAGE" = "true" ] && printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n'
+if [ "$MESSAGE" = "true" ]; then
+  printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n'
+fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # run post install scripts
 run_postinst() {
