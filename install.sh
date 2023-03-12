@@ -307,10 +307,10 @@ CONTAINER_WEB_SERVER_AUTH_ENABLED="no"
 CONTAINER_HTTP_PORT=""
 CONTAINER_HTTPS_PORT=""
 CONTAINER_SERVICE_PORT=""
-CONTAINER_ADD_CUSTOM_PORT="53/tcp,53/udp"
+CONTAINER_ADD_CUSTOM_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add service port [listen:externalPort:internalPort/tcp,udp]
-CONTAINER_ADD_CUSTOM_LISTEN=""
+CONTAINER_ADD_CUSTOM_LISTEN="53/tcp,53/udp"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Database settings [listen] [yes/no]
 CONTAINER_DATABASE_LISTEN=""
