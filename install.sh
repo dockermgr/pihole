@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202303121545-git
+##@Version           :  202303121622-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Sunday, Mar 12, 2023 15:45 EDT
+# @@Created          :  Sunday, Mar 12, 2023 16:22 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -19,7 +19,7 @@
 # @@Template         :  installers/dockermgr
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202303121545-git"
+VERSION="202303121622-git"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
 RUN_USER="${SUDO_USER:-$USER}"
@@ -78,7 +78,6 @@ __show_post_message() {
 
   return $?
 }
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Ensure docker is installed
 __docker_check || __docker_init
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -141,10 +140,10 @@ CONTAINER_SSL_KEY="${CONTAINER_SSL_KEY:-$CONTAINER_SSL_DIR/localhost.key}"
 HUB_IMAGE_URL="pihole/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # image tag [docker pull HUB_IMAGE_URL:tag]
-HUB_IMAGE_TAG="daily"
+HUB_IMAGE_TAG="nightly"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set the container name Default: [casjaysdevdocker/pihole-$HUB_IMAGE_TAG]
-CONTAINER_NAME=""
+CONTAINER_NAME="pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container timezone - Default: [America/New_York]
 CONTAINER_TIMEZONE=""
@@ -236,7 +235,7 @@ CONTAINER_WEB_SERVER_ENABLED="yes"
 CONTAINER_WEB_SERVER_INT_PORT="80"
 CONTAINER_WEB_SERVER_SSL_ENABLED="no"
 CONTAINER_WEB_SERVER_AUTH_ENABLED="no"
-CONTAINER_WEB_SERVER_LISTEN_ON="127.0.0.1"
+CONTAINER_WEB_SERVER_LISTEN_ON="0.0.0.0"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add service port [port] or [port:port] or [ip:port:port]
 # Only ONE of HTTP or HTTPS if web server or SERVICE port for mysql/pgsql/ftp/pgsql.
@@ -290,11 +289,11 @@ CONTAINER_SERVICES_LIST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container data dir [yes/no] [/data]
 CONTAINER_MOUNT_DATA_ENABLED="yes"
-CONTAINER_MOUNT_DATA_MOUNT_DIR=""
+CONTAINER_MOUNT_DATA_MOUNT_DIR="/etc/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container config dir [yes/no] [/config]
 CONTAINER_MOUNT_CONFIG_ENABLED="yes"
-CONTAINER_MOUNT_CONFIG_MOUNT_DIR=""
+CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/etc/dnsmasq.d"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts [/dir:/dir,/otherdir:/otherdir]
 CONTAINER_MOUNTS=""
@@ -313,7 +312,7 @@ CONTAINER_SYSCTL=""
 CONTAINER_SYSCTL+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set capabilites [CAP,OTHERCAP]
-CONTAINER_CAPABILITIES="SYS_ADMIN,SYS_TIME,CAP_NET_BIND_SERVICE,CAP_NET_RAW"
+CONTAINER_CAPABILITIES="SYS_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW"
 CONTAINER_CAPABILITIES+=",CAP_NET_ADMIN,CAP_SYS_NICE,CAP_CHOWN"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define labels [traefik.enable=true,label=label,otherlabel=label2]
@@ -335,32 +334,44 @@ CONTAINER_DEBUG_OPTIONS=""
 # Show post install message
 POST_SHOW_FINISHED_MESSAGE=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Set custom docker arguments
-SET_DOCKER_ARGS=(
-  "--env TZ=\"${TZ:-$CONTAINER_TIMEZONE}\""
-  "--env DNSSEC=\"$DNSSEC:-true}\""
-  "--env WEBPASSWORD=\"${WEBPASSWORD:-$CONTAINER_USER_PASS}\""
-  "--env WEBUIBOXEDLAYOUT=\"${WEBUIBOXEDLAYOUT:-boxed}\""
-  "--env WEBTHEME=\"${WEBTHEME:-dark}\""
-  "--env FTLCONF_LOCAL_IPV4=\"${FTLCONF_LOCAL_IPV4:-${CURRENT_IP_6:-$(__local_lan_ip)}}\""
-  "--env FTLCONF_LOCAL_IPV6=\"${FTLCONF_LOCAL_IPV6:-$CURRENT_IP_6}\""
-  "--env VIRTUAL_HOST=\"${VIRTUAL_HOST:-$CONTAINER_HOSTNAME}\""
-  "--env PIHOLE_VIRTUAL_HOST=\"${PIHOLE_VIRTUAL_HOST:-$CONTAINER_HOSTNAME}\""
-  "--env PIHOLE_VIRTUAL_DOMAIN=\"${PIHOLE_VIRTUAL_DOMAIN:-$CONTAINER_DOMAINNAME}\""
-  "--env DHCP_ACTIVE=\"${DHCP_ACTIVE:-false}\""
-  "--env DHCP_START=\"${DHCP_START:-192.168.6.100}\""
-  "--env DHCP_END=\"${DHCP_END:-192.168.6.254}\""
-  "--env DHCP_ROUTER=\"${DHCP_ROUTER:-192.168.6.1}\""
-  "--env DHCP_LEASETIME=\"${DHCP_LEASETIME:-24}\""
-  "--env PIHOLE_DOMAIN=\"${PIHOLE_DOMAIN:-$PIHOLE_VIRTUAL_DOMAIN}\""
-  "--env DHCP_IPv6=\"${DHCP_IPv6:-false}\""
-  "--env IPv6=\"${IPv6:-true}\""
-  "--env INTERFACE=\"${INTERFACE:-}\""
-  "--env DNSMASQ_LISTENING=\"${DNSMASQ_LISTENING:-all}\""
-  "--env WEB_BIND_ADDR=\"${WEB_BIND_ADDR:-}\""
-  "--env TEMPERATUREUNIT=\"${TEMPERATUREUNIT:-f}\""
-  "--env QUERY_LOGGING=\"${QUERY_LOGGING:-true}\""
-)
+# Set custom docker arguments user for a list of container variables
+__custom_docker_env() {
+  DOCKER_CUSTOM_ARRAY=(
+    "--env TZ=\"${TZ:-$CONTAINER_TIMEZONE}\""
+    "--env DNSSEC=\"$DNSSEC:-true}\""
+    "--env WEBPASSWORD=\"${WEBPASSWORD:-$CONTAINER_USER_PASS}\""
+    "--env WEBUIBOXEDLAYOUT=\"${WEBUIBOXEDLAYOUT:-boxed}\""
+    "--env WEBTHEME=\"${WEBTHEME:-dark}\""
+    "--env FTLCONF_LOCAL_IPV4=\"${FTLCONF_LOCAL_IPV4:-${CURRENT_IP_6:-$(__local_lan_ip)}}\""
+    "--env FTLCONF_LOCAL_IPV6=\"${FTLCONF_LOCAL_IPV6:-$CURRENT_IP_6}\""
+    "--env VIRTUAL_HOST=\"${VIRTUAL_HOST:-$CONTAINER_HOSTNAME}\""
+    "--env PIHOLE_VIRTUAL_HOST=\"${PIHOLE_VIRTUAL_HOST:-$CONTAINER_HOSTNAME}\""
+    "--env PIHOLE_VIRTUAL_DOMAIN=\"${PIHOLE_VIRTUAL_DOMAIN:-$CONTAINER_DOMAINNAME}\""
+    "--env DHCP_ACTIVE=\"${DHCP_ACTIVE:-false}\""
+    "--env DHCP_START=\"${DHCP_START:-192.168.6.100}\""
+    "--env DHCP_END=\"${DHCP_END:-192.168.6.254}\""
+    "--env DHCP_ROUTER=\"${DHCP_ROUTER:-192.168.6.1}\""
+    "--env DHCP_LEASETIME=\"${DHCP_LEASETIME:-24}\""
+    "--env PIHOLE_DOMAIN=\"${PIHOLE_DOMAIN:-$PIHOLE_VIRTUAL_DOMAIN}\""
+    "--env DHCP_IPv6=\"${DHCP_IPv6:-false}\""
+    "--env IPv6=\"${IPv6:-true}\""
+    "--env INTERFACE=\"${INTERFACE:-}\""
+    "--env DNSMASQ_LISTENING=\"${DNSMASQ_LISTENING:-all}\""
+    "--env WEB_BIND_ADDR=\"${WEB_BIND_ADDR:-}\""
+    "--env TEMPERATUREUNIT=\"${TEMPERATUREUNIT:-f}\""
+    "--env QUERY_LOGGING=\"${QUERY_LOGGING:-true}\""
+  )
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this function will create an env file in the containers filesystem - see CONTAINER_ENV_FILE_ENABLED
+__container_import_variables() {
+  [ "$CONTAINER_ENV_FILE_ENABLED" = "yes" ] || return 0
+  local base_dir="$DATADIR"
+  local base_file="$1"
+  mkdir -p "$(dirname "$base_dir/$base_file" 2>/dev/null)"
+  cat <<EOF | tee "$base_dir/$base_file" &>/dev/null
+EOF
+}
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define extra functions
 __sudo() { sudo -n true && eval sudo "$*" || eval "$*" || return 1; }
@@ -379,11 +390,6 @@ __host_name() { hostname -f 2>/dev/null | grep '\.' | grep '^' || hostname -f 2>
 __docker_init() { [ -n "$(type -p dockermgr 2>/dev/null)" ] && dockermgr init || printf_exit "Failed to Initialize the docker installer"; }
 __domain_name() { hostname -f 2>/dev/null | awk -F '.' '{print $(NF-1)"."$NF}' | grep '\.' | grep '^' || hostname -f 2>/dev/null | grep '^' || return 1; }
 __port_in_use() { { [ -d "/etc/nginx/vhosts.d" ] && grep -wRsq "${1:-443}" "/etc/nginx/vhosts.d" || netstat -taupln 2>/dev/null | grep '[0-9]:[0-9]' | grep 'LISTEN' | grep -q "${1:-443}"; } && return 1 || return 0; }
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-__public_ip() { curl -q -LSsf "http://ifconfig.co" | grep -v '^$' | head -n1 | grep '^'; }
-__docker_gateway_ip() { sudo docker network inspect -f '{{json .IPAM.Config}}' ${HOST_DOCKER_NETWORK:-bridge} | jq -r '.[].Gateway' | grep -v '^$' | head -n1 | grep '^' || echo '172.17.0.1'; }
-__docker_net_create() { __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && return 0 || { docker network create -d bridge --attachable $HOST_DOCKER_NETWORK &>/dev/null && __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && echo "$HOST_DOCKER_NETWORK" && return 0 || return 1; }; }
-__local_lan_ip() { [ -n "$SET_LAN_IP" ] && (echo "$SET_LAN_IP" | grep -E '192\.168\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '10\.[0-255]\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '172\.[10-32]' | grep -v '172\.[10-15]' 2>/dev/null) | grep -v '172\.17' | grep -v '^$' | head -n1 | grep '^' || echo "$CURRENT_IP_4" | grep '^'; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __rport() {
   local port
@@ -407,6 +413,12 @@ __trim() {
 [ -f "$APPDIR/env.sh" ] && . "$APPDIR/env.sh"
 [ -f "$DOCKERMGR_CONFIG_DIR/.env.sh" ] && . "$DOCKERMGR_CONFIG_DIR/.env.sh"
 [ -f "$DOCKERMGR_CONFIG_DIR/env/$APPNAME" ] && . "$DOCKERMGR_CONFIG_DIR/env/$APPNAME"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Initialize the installer
+dockermgr_run_init
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run pre-install commands
+execute "run_pre_install" "Running pre-installation commands"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # variable cleanup
 CONTAINER_ENV="${CONTAINER_ENV//  / }"
@@ -1150,7 +1162,6 @@ NGINX_PROXY_URL="${NGINX_PROXY_URL:-$PROXY_HTTP_PROTO://$HOST_LISTEN_ADDR:$NGINX
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 [ -d "$APPDIR/files" ] && [ ! -d "$DATADIR" ] && mv -f "$APPDIR/files" "$DATADIR"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#
 # Clone/update the repo
 if __am_i_online; then
   urlverify "$REPO" || printf_exit "$REPO was not found"
@@ -1187,7 +1198,7 @@ if [ -n "$DOCKER_SET_PORTS_ENV" ]; then
   DOCKER_SET_OPTIONS+="--env ENV_PORTS=\"${DOCKER_SET_PORTS_ENV//: /}\""
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Main progam
+# Clean up variables
 HUB_IMAGE_URL="$(__trim "${HUB_IMAGE_URL[*]:-}")"
 HUB_IMAGE_TAG="$(__trim "${HUB_IMAGE_TAG[*]:-}")"
 DOCKER_SET_CAP="$(__trim "${DOCKER_SET_CAP[*]:-}")"
@@ -1200,11 +1211,17 @@ DOCKER_SET_SYSCTL="$(__trim "${DOCKER_SET_SYSCTL[*]:-}")"
 DOCKER_SET_OPTIONS="$(__trim "${DOCKER_SET_OPTIONS[*]:-}")"
 CONTAINER_COMMANDS="$(__trim "${CONTAINER_COMMANDS[*]:-}")"
 DOCKER_SET_PUBLISH="$(__trim "${DOCKER_SET_TMP_PUBLISH[*]:-}")"
+DOCKER_CUSTOM_ARRAY=("$(__trim "${DOCKER_CUSTOM_ARRAY[*]:-}")")
 EXECUTE_PRE_INSTALL="docker stop $CONTAINER_NAME;docker rm -f $CONTAINER_NAME"
-EXECUTE_DOCKER_CMD="docker run -d $DOCKER_SET_OPTIONS $DOCKER_SET_LINK $DOCKER_SET_LABELS $DOCKER_SET_CAP $DOCKER_SET_SYSCTL $DOCKER_SET_DEV $DOCKER_SET_MNT $DOCKER_SET_ENV $DOCKER_SET_PUBLISH $SET_DOCKER_ARGS $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS"
+EXECUTE_DOCKER_CMD="docker run -d $DOCKER_SET_OPTIONS ${DOCKER_CUSTOM_ARRAY[*]} $DOCKER_SET_LINK $DOCKER_SET_LABELS $DOCKER_SET_CAP $DOCKER_SET_SYSCTL $DOCKER_SET_DEV $DOCKER_SET_MNT $DOCKER_SET_ENV $DOCKER_SET_PUBLISH $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS"
 EXECUTE_DOCKER_CMD="$(__trim "$EXECUTE_DOCKER_CMD")"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run functions
+__custom_docker_env
 __container_import_variables "$CONTAINER_ENV_FILE_MOUNT"
 __dockermgr_variables >"$DOCKERMGR_CONFIG_DIR/env/$APPNAME"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Main progam
 if cmd_exists docker-compose && [ -f "$INSTDIR/docker-compose.yml" ]; then
   printf_yellow "Installing containers using docker-compose"
   sed -i 's|REPLACE_DATADIR|'$DATADIR'' "$INSTDIR/docker-compose.yml" &>/dev/null
