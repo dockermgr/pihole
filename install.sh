@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202303121622-git
+##@Version           :  202303121641-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Sunday, Mar 12, 2023 16:22 EDT
+# @@Created          :  Sunday, Mar 12, 2023 16:41 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -19,7 +19,7 @@
 # @@Template         :  installers/dockermgr
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202303121622-git"
+VERSION="202303121641-git"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
 RUN_USER="${SUDO_USER:-$USER}"
@@ -53,34 +53,6 @@ fi
 # Make sure the scripts repo is installed
 scripts_check
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-__dockermgr_variables() {
-  cat <<EOF | tee | tr '|' '\n'
-# Enviroment variables for $APPNAME
-${DOCKERMGR_CUSTOM_VARIABLE_IMPORT}HUB_IMAGE_URL="${HUB_IMAGE_URL:-}"|HUB_IMAGE_TAG="${HUB_IMAGE_TAG:-}"|CONTAINER_NAME="${CONTAINER_NAME:-}"|USER_ID_ENABLED="${USER_ID_ENABLED:-}"|CONTAINER_USER_ID="${CONTAINER_USER_ID:-}"|CONTAINER_GROUP_ID="${CONTAINER_GROUP_ID:-}"|CONTAINER_PRIVILEGED_ENABLED="${CONTAINER_PRIVILEGED_ENABLED:-}"|CONTAINER_SHM_SIZE="${CONTAINER_SHM_SIZE:-}"|CONTAINER_AUTO_RESTART="${CONTAINER_AUTO_RESTART:-}"|CONTAINER_AUTO_DELETE="${CONTAINER_AUTO_DELETE:-}"|CONTAINER_TTY_ENABLED="${CONTAINER_TTY_ENABLED:-}"|CONTAINER_INTERACTIVE_ENABLED="${CONTAINER_INTERACTIVE_ENABLED:-}"|CGROUPS_ENABLED="${CGROUPS_ENABLED:-}"|CGROUPS_MOUNTS="${CGROUPS_MOUNTS:-}"|HOST_RESOLVE_ENABLED="${HOST_RESOLVE_ENABLED:-}"|HOST_RESOLVE_FILE="${HOST_RESOLVE_FILE:-}"|DOCKER_SOCKET_ENABLED="${DOCKER_SOCKET_ENABLED:-}"|DOCKER_SOCKET_MOUNT="${DOCKER_SOCKET_MOUNT:-}"|DOCKER_CONFIG_ENABLED="${DOCKER_CONFIG_ENABLED:-}"|HOST_DOCKER_CONFIG="${HOST_DOCKER_CONFIG:-}"|DOCKER_SOUND_ENABLED="${DOCKER_SOUND_ENABLED:-}"|HOST_SOUND_CONFIG="${HOST_SOUND_CONFIG:-}"|HOST_ETC_HOSTS_ENABLED="${HOST_ETC_HOSTS_ENABLED:-}"|CONTAINER_HOSTNAME="${CONTAINER_HOSTNAME:-}"|CONTAINER_DOMAINNAME="${CONTAINER_DOMAINNAME:-}"|HOST_DOCKER_NETWORK="${HOST_DOCKER_NETWORK:-}"|HOST_NETWORK_ADDR="${HOST_NETWORK_ADDR:-}"|HOST_NETWORK_LOCAL_ADDR="${HOST_NETWORK_LOCAL_ADDR:-}"|HOST_DEFINE_LISTEN="${HOST_DEFINE_LISTEN:-}"|HOST_NGINX_ENABLED="${HOST_NGINX_ENABLED:-}"|HOST_NGINX_SSL_ENABLED="${HOST_NGINX_SSL_ENABLED:-}"|HOST_NGINX_HTTP_PORT="${HOST_NGINX_HTTP_PORT:-}"|HOST_NGINX_HTTPS_PORT="${HOST_NGINX_HTTPS_PORT:-}"|HOST_NGINX_UPDATE_CONF="${HOST_NGINX_UPDATE_CONF:-}"|CONTAINER_WEB_SERVER_ENABLED="${CONTAINER_WEB_SERVER_ENABLED:-}"|CONTAINER_WEB_SERVER_SSL_ENABLED="${CONTAINER_WEB_SERVER_SSL_ENABLED:-}"|CONTAINER_WEB_SERVER_AUTH_ENABLED="${CONTAINER_WEB_SERVER_AUTH_ENABLED:-}"|CONTAINER_WEB_SERVER_INT_PORT="${CONTAINER_WEB_SERVER_INT_PORT:-}"|CONTAINER_WEB_SERVER_EMAIL="${CONTAINER_WEB_SERVER_EMAIL:-}"|CONTAINER_HTTP_PROTO="${CONTAINER_HTTP_PROTO:-}"|HOST_NETWORK_ADDR="${HOST_NETWORK_ADDR:-}"|CONTAINER_HTTP_PORT="${CONTAINER_HTTP_PORT:-}"|CONTAINER_HTTPS_PORT="${CONTAINER_HTTPS_PORT:-}"|CONTAINER_SERVICE_PORT="${CONTAINER_SERVICE_PORT:-}"|CONTAINER_ADD_CUSTOM_PORT="${CONTAINER_ADD_CUSTOM_PORT:-}"|CONTAINER_ADD_CUSTOM_LISTEN="${CONTAINER_ADD_CUSTOM_LISTEN:-}"||CONTAINER_MOUNT_DATA_ENABLED="${CONTAINER_MOUNT_DATA_ENABLED:-}"|CONTAINER_MOUNT_DATA_MOUNT_DIR="${CONTAINER_MOUNT_DATA_MOUNT_DIR:-}"|CONTAINER_MOUNT_CONFIG_ENABLED="${CONTAINER_MOUNT_CONFIG_ENABLED:-}"|CONTAINER_MOUNT_CONFIG_MOUNT_DIR="${CONTAINER_MOUNT_CONFIG_MOUNT_DIR:-}"|CONTAINER_MOUNTS="${CONTAINER_MOUNTS:-}"|CONTAINER_DEVICES="${CONTAINER_DEVICES:-}"|CONTAINER_ENV="${CONTAINER_ENV:-}"|CONTAINER_SYSCTL="${CONTAINER_SYSCTL:-}"|CONTAINER_CAPABILITIES="${CONTAINER_CAPABILITIES:-}"|CONTAINER_LABELS="${CONTAINER_LABELS:-}"|CONTAINER_ENV_USER_NAME="${CONTAINER_ENV_USER_NAME:-}"|CONTAINER_ENV_PASS_NAME="${CONTAINER_ENV_PASS_NAME:-}"|CONTAINER_USER_NAME="${CONTAINER_USER_NAME:-}"|CONTAINER_USER_PASS="${CONTAINER_USER_PASS:-}"|CONTAINER_COMMANDS="${CONTAINER_COMMANDS:-}"|DOCKER_CUSTOM_ARGUMENTS="${DOCKER_CUSTOM_ARGUMENTS:-}"|CONTAINER_DEBUG_ENABLED="${CONTAINER_DEBUG_ENABLED:-}"|CONTAINER_DEBUG_OPTIONS="${CONTAINER_DEBUG_OPTIONS:-}"|POST_SHOW_FINISHED_MESSAGE="${POST_SHOW_FINISHED_MESSAGE:-}"
-
-EOF
-}
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Define any pre-install scripts
-run_pre_install() {
-  true
-  return $?
-}
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Define any post-install scripts
-run_post_install() {
-
-  return 0
-}
-#
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-__show_post_message() {
-
-  return $?
-}
-# Ensure docker is installed
-__docker_check || __docker_init
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Repository variables
 REPO="${DOCKERMGRREPO:-https://github.com/dockermgr}/pihole"
 APPVERSION="$(__appversion "$REPO/raw/${GIT_REPO_BRANCH:-main}/version.txt")"
@@ -103,6 +75,27 @@ trap_exit
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Require a certain version
 dockermgr_req_version "$APPVERSION"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Ensure docker is installed
+__docker_check || __docker_init
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Define any pre-install scripts
+run_pre_install() {
+
+  return 0
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Define any post-install scripts
+run_post_install() {
+
+  return 0
+}
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__show_post_message() {
+
+  return 0
+}
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup application options
 setopts=$(getopt -o "e:,p:,h:,d:" --long "options,env:,port:,host:,domain:" -n "$APPNAME" -- "$@" 2>/dev/null)
@@ -140,7 +133,7 @@ CONTAINER_SSL_KEY="${CONTAINER_SSL_KEY:-$CONTAINER_SSL_DIR/localhost.key}"
 HUB_IMAGE_URL="pihole/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # image tag [docker pull HUB_IMAGE_URL:tag]
-HUB_IMAGE_TAG="nightly"
+HUB_IMAGE_TAG="latest"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set the container name Default: [casjaysdevdocker/pihole-$HUB_IMAGE_TAG]
 CONTAINER_NAME="pihole"
@@ -289,11 +282,11 @@ CONTAINER_SERVICES_LIST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container data dir [yes/no] [/data]
 CONTAINER_MOUNT_DATA_ENABLED="yes"
-CONTAINER_MOUNT_DATA_MOUNT_DIR="/etc/pihole"
+CONTAINER_MOUNT_DATA_MOUNT_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container config dir [yes/no] [/config]
 CONTAINER_MOUNT_CONFIG_ENABLED="yes"
-CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/etc/dnsmasq.d"
+CONTAINER_MOUNT_CONFIG_MOUNT_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts [/dir:/dir,/otherdir:/otherdir]
 CONTAINER_MOUNTS=""
@@ -312,7 +305,7 @@ CONTAINER_SYSCTL=""
 CONTAINER_SYSCTL+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set capabilites [CAP,OTHERCAP]
-CONTAINER_CAPABILITIES="SYS_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW"
+CONTAINER_CAPABILITIES="SYS_ADMIN,SYS_TIME,CAP_NET_BIND_SERVICE,CAP_NET_RAW"
 CONTAINER_CAPABILITIES+=",CAP_NET_ADMIN,CAP_SYS_NICE,CAP_CHOWN"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define labels [traefik.enable=true,label=label,otherlabel=label2]
@@ -320,7 +313,7 @@ CONTAINER_LABELS=""
 CONTAINER_LABELS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Specify container arguments - will run in container [/path/to/script]
-CONTAINER_COMMANDS=""
+CONTAINER_COMMANDS="--dns=1.1.1.1 --dns=8.8.8.8"
 CONTAINER_COMMANDS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional docker arguments - see docker run --help [--option arg1,--option2]
@@ -342,7 +335,7 @@ __custom_docker_env() {
     "--env WEBPASSWORD=\"${WEBPASSWORD:-$CONTAINER_USER_PASS}\""
     "--env WEBUIBOXEDLAYOUT=\"${WEBUIBOXEDLAYOUT:-boxed}\""
     "--env WEBTHEME=\"${WEBTHEME:-dark}\""
-    "--env FTLCONF_LOCAL_IPV4=\"${FTLCONF_LOCAL_IPV4:-${CURRENT_IP_6:-$(__local_lan_ip)}}\""
+    "--env FTLCONF_LOCAL_IPV4=\"${FTLCONF_LOCAL_IPV4:-${CURRENT_IP_4:-$(__local_lan_ip)}}\""
     "--env FTLCONF_LOCAL_IPV6=\"${FTLCONF_LOCAL_IPV6:-$CURRENT_IP_6}\""
     "--env VIRTUAL_HOST=\"${VIRTUAL_HOST:-$CONTAINER_HOSTNAME}\""
     "--env PIHOLE_VIRTUAL_HOST=\"${PIHOLE_VIRTUAL_HOST:-$CONTAINER_HOSTNAME}\""
@@ -373,6 +366,14 @@ __container_import_variables() {
 EOF
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__dockermgr_variables() {
+  cat <<EOF | tee | tr '|' '\n'
+# Enviroment variables for $APPNAME
+${DOCKERMGR_CUSTOM_VARIABLE_IMPORT}HUB_IMAGE_URL="${HUB_IMAGE_URL:-}"|HUB_IMAGE_TAG="${HUB_IMAGE_TAG:-}"|CONTAINER_NAME="${CONTAINER_NAME:-}"|USER_ID_ENABLED="${USER_ID_ENABLED:-}"|CONTAINER_USER_ID="${CONTAINER_USER_ID:-}"|CONTAINER_GROUP_ID="${CONTAINER_GROUP_ID:-}"|CONTAINER_PRIVILEGED_ENABLED="${CONTAINER_PRIVILEGED_ENABLED:-}"|CONTAINER_SHM_SIZE="${CONTAINER_SHM_SIZE:-}"|CONTAINER_AUTO_RESTART="${CONTAINER_AUTO_RESTART:-}"|CONTAINER_AUTO_DELETE="${CONTAINER_AUTO_DELETE:-}"|CONTAINER_TTY_ENABLED="${CONTAINER_TTY_ENABLED:-}"|CONTAINER_INTERACTIVE_ENABLED="${CONTAINER_INTERACTIVE_ENABLED:-}"|CGROUPS_ENABLED="${CGROUPS_ENABLED:-}"|CGROUPS_MOUNTS="${CGROUPS_MOUNTS:-}"|HOST_RESOLVE_ENABLED="${HOST_RESOLVE_ENABLED:-}"|HOST_RESOLVE_FILE="${HOST_RESOLVE_FILE:-}"|DOCKER_SOCKET_ENABLED="${DOCKER_SOCKET_ENABLED:-}"|DOCKER_SOCKET_MOUNT="${DOCKER_SOCKET_MOUNT:-}"|DOCKER_CONFIG_ENABLED="${DOCKER_CONFIG_ENABLED:-}"|HOST_DOCKER_CONFIG="${HOST_DOCKER_CONFIG:-}"|DOCKER_SOUND_ENABLED="${DOCKER_SOUND_ENABLED:-}"|HOST_SOUND_CONFIG="${HOST_SOUND_CONFIG:-}"|HOST_ETC_HOSTS_ENABLED="${HOST_ETC_HOSTS_ENABLED:-}"|CONTAINER_HOSTNAME="${CONTAINER_HOSTNAME:-}"|CONTAINER_DOMAINNAME="${CONTAINER_DOMAINNAME:-}"|HOST_DOCKER_NETWORK="${HOST_DOCKER_NETWORK:-}"|HOST_NETWORK_ADDR="${HOST_NETWORK_ADDR:-}"|HOST_NETWORK_LOCAL_ADDR="${HOST_NETWORK_LOCAL_ADDR:-}"|HOST_DEFINE_LISTEN="${HOST_DEFINE_LISTEN:-}"|HOST_NGINX_ENABLED="${HOST_NGINX_ENABLED:-}"|HOST_NGINX_SSL_ENABLED="${HOST_NGINX_SSL_ENABLED:-}"|HOST_NGINX_HTTP_PORT="${HOST_NGINX_HTTP_PORT:-}"|HOST_NGINX_HTTPS_PORT="${HOST_NGINX_HTTPS_PORT:-}"|HOST_NGINX_UPDATE_CONF="${HOST_NGINX_UPDATE_CONF:-}"|CONTAINER_WEB_SERVER_ENABLED="${CONTAINER_WEB_SERVER_ENABLED:-}"|CONTAINER_WEB_SERVER_SSL_ENABLED="${CONTAINER_WEB_SERVER_SSL_ENABLED:-}"|CONTAINER_WEB_SERVER_AUTH_ENABLED="${CONTAINER_WEB_SERVER_AUTH_ENABLED:-}"|CONTAINER_WEB_SERVER_INT_PORT="${CONTAINER_WEB_SERVER_INT_PORT:-}"|CONTAINER_WEB_SERVER_EMAIL="${CONTAINER_WEB_SERVER_EMAIL:-}"|CONTAINER_HTTP_PROTO="${CONTAINER_HTTP_PROTO:-}"|HOST_NETWORK_ADDR="${HOST_NETWORK_ADDR:-}"|CONTAINER_HTTP_PORT="${CONTAINER_HTTP_PORT:-}"|CONTAINER_HTTPS_PORT="${CONTAINER_HTTPS_PORT:-}"|CONTAINER_SERVICE_PORT="${CONTAINER_SERVICE_PORT:-}"|CONTAINER_ADD_CUSTOM_PORT="${CONTAINER_ADD_CUSTOM_PORT:-}"|CONTAINER_ADD_CUSTOM_LISTEN="${CONTAINER_ADD_CUSTOM_LISTEN:-}"||CONTAINER_MOUNT_DATA_ENABLED="${CONTAINER_MOUNT_DATA_ENABLED:-}"|CONTAINER_MOUNT_DATA_MOUNT_DIR="${CONTAINER_MOUNT_DATA_MOUNT_DIR:-}"|CONTAINER_MOUNT_CONFIG_ENABLED="${CONTAINER_MOUNT_CONFIG_ENABLED:-}"|CONTAINER_MOUNT_CONFIG_MOUNT_DIR="${CONTAINER_MOUNT_CONFIG_MOUNT_DIR:-}"|CONTAINER_MOUNTS="${CONTAINER_MOUNTS:-}"|CONTAINER_DEVICES="${CONTAINER_DEVICES:-}"|CONTAINER_ENV="${CONTAINER_ENV:-}"|CONTAINER_SYSCTL="${CONTAINER_SYSCTL:-}"|CONTAINER_CAPABILITIES="${CONTAINER_CAPABILITIES:-}"|CONTAINER_LABELS="${CONTAINER_LABELS:-}"|CONTAINER_ENV_USER_NAME="${CONTAINER_ENV_USER_NAME:-}"|CONTAINER_ENV_PASS_NAME="${CONTAINER_ENV_PASS_NAME:-}"|CONTAINER_USER_NAME="${CONTAINER_USER_NAME:-}"|CONTAINER_USER_PASS="${CONTAINER_USER_PASS:-}"|CONTAINER_COMMANDS="${CONTAINER_COMMANDS:-}"|DOCKER_CUSTOM_ARGUMENTS="${DOCKER_CUSTOM_ARGUMENTS:-}"|CONTAINER_DEBUG_ENABLED="${CONTAINER_DEBUG_ENABLED:-}"|CONTAINER_DEBUG_OPTIONS="${CONTAINER_DEBUG_OPTIONS:-}"|POST_SHOW_FINISHED_MESSAGE="${POST_SHOW_FINISHED_MESSAGE:-}"
+
+EOF
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define extra functions
 __sudo() { sudo -n true && eval sudo "$*" || eval "$*" || return 1; }
 __port() { echo "$((50000 + $RANDOM % 1000))" | grep '^' || return 1; }
@@ -390,6 +391,11 @@ __host_name() { hostname -f 2>/dev/null | grep '\.' | grep '^' || hostname -f 2>
 __docker_init() { [ -n "$(type -p dockermgr 2>/dev/null)" ] && dockermgr init || printf_exit "Failed to Initialize the docker installer"; }
 __domain_name() { hostname -f 2>/dev/null | awk -F '.' '{print $(NF-1)"."$NF}' | grep '\.' | grep '^' || hostname -f 2>/dev/null | grep '^' || return 1; }
 __port_in_use() { { [ -d "/etc/nginx/vhosts.d" ] && grep -wRsq "${1:-443}" "/etc/nginx/vhosts.d" || netstat -taupln 2>/dev/null | grep '[0-9]:[0-9]' | grep 'LISTEN' | grep -q "${1:-443}"; } && return 1 || return 0; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__public_ip() { curl -q -LSsf "http://ifconfig.co" | grep -v '^$' | head -n1 | grep '^'; }
+__docker_gateway_ip() { sudo docker network inspect -f '{{json .IPAM.Config}}' ${HOST_DOCKER_NETWORK:-bridge} | jq -r '.[].Gateway' | grep -v '^$' | head -n1 | grep '^' || echo '172.17.0.1'; }
+__docker_net_create() { __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && return 0 || { docker network create -d bridge --attachable $HOST_DOCKER_NETWORK &>/dev/null && __docker_net_ls | grep -q "$HOST_DOCKER_NETWORK" && echo "$HOST_DOCKER_NETWORK" && return 0 || return 1; }; }
+__local_lan_ip() { [ -n "$SET_LAN_IP" ] && (echo "$SET_LAN_IP" | grep -E '192\.168\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '10\.[0-255]\.[0-255]\.[0-255]' 2>/dev/null || echo "$SET_LAN_IP" | grep -E '172\.[10-32]' | grep -v '172\.[10-15]' 2>/dev/null) | grep -v '172\.17' | grep -v '^$' | head -n1 | grep '^' || echo "$CURRENT_IP_4" | grep '^'; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __rport() {
   local port
@@ -679,6 +685,9 @@ else
   HOST_DEFINE_LISTEN=0.0.0.0
   HOST_LISTEN_ADDR=$(__local_lan_ip)
 fi
+if [ "$HOST_LISTEN_ADDR" = "0.0.0.0" ]; then
+  HOST_LISTEN_ADDR="$SET_LAN_IP"
+fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
 if [ "$HOST_NGINX_ENABLED" = "yes" ]; then
@@ -764,7 +773,7 @@ if [ -n "$CONTAINER_ADD_CUSTOM_LISTEN" ]; then
   CONTAINER_ADD_CUSTOM_LISTEN="${CONTAINER_ADD_CUSTOM_LISTEN//  / }"
 fi
 HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR:-$HOST_DEFINE_LISTEN}"
-HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR//0.0.0.0/$HOST_LISTEN_ADDR}"
+HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR//0.0.0.0/$SET_LAN_IP}"
 HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR//:*/}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
