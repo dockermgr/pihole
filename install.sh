@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202303121719-git
+##@Version           :  202303121800-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Sunday, Mar 12, 2023 17:19 EDT
+# @@Created          :  Sunday, Mar 12, 2023 18:00 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -19,7 +19,7 @@
 # @@Template         :  installers/dockermgr
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202303121719-git"
+VERSION="202303121800-git"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
 RUN_USER="${SUDO_USER:-$USER}"
@@ -279,7 +279,7 @@ CONTAINER_SERVICE_PORT=""
 CONTAINER_ADD_CUSTOM_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add service port [listen:externalPort:internalPort/[tcp,udp]]
-CONTAINER_ADD_CUSTOM_LISTEN="0.0.0.0:53:53/tcp,0.0.0.0:53:53/udp"
+CONTAINER_ADD_CUSTOM_LISTEN="0.0.0.0:53:53/udp,0.0.0.0:53:53/tcp"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to the protocol the the container will use [http/https/git/ftp/pgsql/mysql/mongodb]
 CONTAINER_HTTP_PROTO="http"
@@ -323,11 +323,11 @@ CONTAINER_SERVICES_LIST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container data dir [yes/no] [/data]
 CONTAINER_MOUNT_DATA_ENABLED="yes"
-CONTAINER_MOUNT_DATA_MOUNT_DIR="/etc/dnsmasq.d"
+CONTAINER_MOUNT_DATA_MOUNT_DIR="/data/dnsmasq.d"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container config dir [yes/no] [/config]
 CONTAINER_MOUNT_CONFIG_ENABLED="yes"
-CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/etc/pihole"
+CONTAINER_MOUNT_CONFIG_MOUNT_DIR="/config/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts [/dir:/dir,/otherdir:/otherdir]
 CONTAINER_MOUNTS=""
@@ -444,7 +444,6 @@ dockermgr_run_init
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run pre-install commands
 execute "run_pre_install" "Running pre-installation commands"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # variable cleanup
 CONTAINER_ENV="${CONTAINER_ENV//  / }"
@@ -869,25 +868,25 @@ if [ "$CONTAINER_DATABASE_ENABLED" = "yes" ]; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # containers username and password configuration
-if [ -n "$GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME" ]; then
-  CONTAINER_USER_NAME="$GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME"
+if [ -n "$PIHOLE_USERNAME" ]; then
+  CONTAINER_USER_NAME="$PIHOLE_USERNAME"
 fi
 if [ -n "$CONTAINER_USER_NAME" ]; then
-  CONTAINER_USER_NAME="${GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME:-${CONTAINER_USER_NAME:-$DEFAULT_USERNAME}}"
+  CONTAINER_USER_NAME="${PIHOLE_USERNAME:-${CONTAINER_USER_NAME:-$DEFAULT_USERNAME}}"
 fi
 if [ -n "$CONTAINER_USER_NAME" ]; then
   if [ -n "$CONTAINER_ENV_USER_NAME" ]; then
     ADDITION_ENV+="${CONTAINER_ENV_USER_NAME:-username}=$CONTAINER_USER_NAME "
   fi
 fi
-if [ -n "$GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD" ]; then
-  CONTAINER_USER_PASS="$GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD"
+if [ -n "$PIHOLE_PASSWORD" ]; then
+  CONTAINER_USER_PASS="$PIHOLE_PASSWORD"
 fi
 if [ -n "$CONTAINER_USER_PASS" ]; then
   if [ "$CONTAINER_USER_PASS" = "random" ]; then
     CONTAINER_USER_PASS="$(__password "${CONTAINER_PASS_LENGTH:-10}")"
   fi
-  CONTAINER_USER_PASS="${GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD:-${CONTAINER_USER_PASS:-$DEFAULT_PASSWORD}}"
+  CONTAINER_USER_PASS="${PIHOLE_PASSWORD:-${CONTAINER_USER_PASS:-$DEFAULT_PASSWORD}}"
 fi
 if [ -n "$CONTAINER_USER_PASS" ]; then
   if [ -n "$CONTAINER_ENV_PASS_NAME" ]; then
@@ -1095,8 +1094,9 @@ if [ -n "$CONTAINER_ADD_CUSTOM_LISTEN" ]; then
   for set_port in $CONTAINER_ADD_CUSTOM_LISTEN; do
     if [ "$port" != " " ] && [ -n "$port" ]; then
       port=$set_port
-      echo "$port" | grep -q ':' || port="${port//\/*/}:$port"
-      TYPE="$(echo "$set_port" | grep '/' | awk -F '/' '{print $NF}' | head -n1 | grep '^' || echo '')"
+      echo "$port" | grep -q ':.*.:' || random_port="$(__rport)"
+      echo "$port" | grep -q ':' || port="${random_port:-$port//\/*/}:$port"
+      TYPE="$(echo "$port" | grep '/' | awk -F '/' '{print $NF}' | head -n1 | grep '^' || echo '')"
       if [ -z "$TYPE" ]; then
         DOCKER_SET_TMP_PUBLISH+=("--publish $port")
       else
