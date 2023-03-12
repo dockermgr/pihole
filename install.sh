@@ -445,6 +445,7 @@ dockermgr_run_init
 # Run pre-install commands
 execute "run_pre_install" "Running pre-installation commands"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # variable cleanup
 CONTAINER_ENV="${CONTAINER_ENV//  / }"
 CONTAINER_LABELS="${CONTAINER_LABELS//  / }"
@@ -868,25 +869,25 @@ if [ "$CONTAINER_DATABASE_ENABLED" = "yes" ]; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # containers username and password configuration
-if [ -n "$PIHOLE_USERNAME" ]; then
-  CONTAINER_USER_NAME="$PIHOLE_USERNAME"
+if [ -n "$GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME" ]; then
+  CONTAINER_USER_NAME="$GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME"
 fi
 if [ -n "$CONTAINER_USER_NAME" ]; then
-  CONTAINER_USER_NAME="${PIHOLE_USERNAME:-${CONTAINER_USER_NAME:-$DEFAULT_USERNAME}}"
+  CONTAINER_USER_NAME="${GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME:-${CONTAINER_USER_NAME:-$DEFAULT_USERNAME}}"
 fi
 if [ -n "$CONTAINER_USER_NAME" ]; then
   if [ -n "$CONTAINER_ENV_USER_NAME" ]; then
     ADDITION_ENV+="${CONTAINER_ENV_USER_NAME:-username}=$CONTAINER_USER_NAME "
   fi
 fi
-if [ -n "$PIHOLE_PASSWORD" ]; then
-  CONTAINER_USER_PASS="$PIHOLE_PASSWORD"
+if [ -n "$GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD" ]; then
+  CONTAINER_USER_PASS="$GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD"
 fi
 if [ -n "$CONTAINER_USER_PASS" ]; then
   if [ "$CONTAINER_USER_PASS" = "random" ]; then
     CONTAINER_USER_PASS="$(__password "${CONTAINER_PASS_LENGTH:-10}")"
   fi
-  CONTAINER_USER_PASS="${PIHOLE_PASSWORD:-${CONTAINER_USER_PASS:-$DEFAULT_PASSWORD}}"
+  CONTAINER_USER_PASS="${GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD:-${CONTAINER_USER_PASS:-$DEFAULT_PASSWORD}}"
 fi
 if [ -n "$CONTAINER_USER_PASS" ]; then
   if [ -n "$CONTAINER_ENV_PASS_NAME" ]; then
@@ -1094,9 +1095,8 @@ if [ -n "$CONTAINER_ADD_CUSTOM_LISTEN" ]; then
   for set_port in $CONTAINER_ADD_CUSTOM_LISTEN; do
     if [ "$port" != " " ] && [ -n "$port" ]; then
       port=$set_port
-      echo "$port" | grep -q ':.*.:' || random_port="$(__rport)"
-      echo "$port" | grep -q ':' || port="${random_port:-$port//\/*/}:$port"
-      TYPE="$(echo "$port" | grep '/' | awk -F '/' '{print $NF}' | head -n1 | grep '^' || echo '')"
+      echo "$port" | grep -q ':' || port="${port//\/*/}:$port"
+      TYPE="$(echo "$set_port" | grep '/' | awk -F '/' '{print $NF}' | head -n1 | grep '^' || echo '')"
       if [ -z "$TYPE" ]; then
         DOCKER_SET_TMP_PUBLISH+=("--publish $port")
       else
