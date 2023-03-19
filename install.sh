@@ -1364,7 +1364,8 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps; then
       if [ "$service" != "--publish" ] && [ "$service" != " " ] && [ -n "$service" ]; then
         get_type="${service//:*\//}"
         get_type="${get_type//$service/}"
-        service=${service//*\//}
+        type=${get_type//\/*/}
+        service=${service//\/*/}
         set_listen=${service%:*}
         set_service=${service//*:*[^:]*:/}
         listen_ip=${set_listen//0.0.0.0/$HOST_LISTEN_ADDR}
