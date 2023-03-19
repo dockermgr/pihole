@@ -375,17 +375,20 @@ POST_SHOW_FINISHED_MESSAGE=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set custom docker arguments user for a list of container variables
 __custom_docker_env() {
-  cat <<EOF | tee
-WEBTHEME=default-dark 
-DNS_FQDN_REQUIRED=true 
-FTLCONF_LOCAL_IPV4=$CURRENT_IP_4 
-IPv6=true DHCP_IPv6=true
-TEMPERATUREUNIT=f 
-SOCKET_LISTENING=all 
-DNSMASQ_LISTENING=all WEB_PORT=80 
-VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME} 
-PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME} 
-PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME} 
+  cat <<EOF | tee | tr '\n' ' '
+--env WEB_PORT="80"
+--env WEBTHEME="default-dark"
+--env DNS_FQDN_REQUIRED="true"
+--env FTLCONF_LOCAL_IPV4="$CURRENT_IP_4"
+--env IPv6=true
+--env DHCP_IPv6="true"
+--env TEMPERATUREUNIT="f"
+--env SOCKET_LISTENING="all"
+--env DNSMASQ_LISTENING="all"
+--env VIRTUAL_HOST="${CONTAINER_HOSTNAME:-$HOSTNAME}"
+--env PIHOLE_DOMAIN="${CONTAINER_DOMAINNAME:-$HOSTNAME}"
+--env PROXY_LOCATION="${CONTAINER_HOSTNAME:-$HOSTNAME}"
+
 EOF
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
