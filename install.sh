@@ -1362,7 +1362,7 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps; then
     printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
     for service in $SET_PORT; do
       if [ "$service" != "--publish" ] && [ "$service" != " " ] && [ -n "$service" ]; then
-        get_type="${service//:*\//}"
+        get_type="${service//*\//}"
         get_type="${get_type//$service/}"
         type=${get_type//*\//}
         service=${service//\/*/}
