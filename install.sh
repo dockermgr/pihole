@@ -382,10 +382,9 @@ POST_SHOW_FINISHED_MESSAGE=""
 # Set custom container enviroment variables - [--env MYVAR="VAR"]
 __custom_docker_env() {
   cat <<EOF | tee | sed 's|,| --env |g' | tr '\n' ' ' | __remove_extra_spaces
---env WEB_PORT="80"
 --env WEBTHEME="default-dark"
 --env DNS_FQDN_REQUIRED="true"
---env FTLCONF_LOCAL_IPV4="$CURRENT_IP_4"
+--env FTLCONF_LOCAL_IPV4=$CURRENT_IP_4
 --env IPv6=true
 --env DHCP_IPv6="true"
 --env TEMPERATUREUNIT="f"
