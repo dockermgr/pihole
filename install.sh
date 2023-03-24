@@ -320,7 +320,7 @@ CONTAINER_PASS_LENGTH="12"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container username and password env name [CONTAINER_ENV_USER_NAME=$CONTAINER_USER_NAME]
 CONTAINER_ENV_USER_NAME=""
-CONTAINER_ENV_PASS_NAME="WEBPASSWORD"
+CONTAINER_ENV_PASS_NAME=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # mail settings [yes/no] [user] [domainname] [server]
 CONTAINER_EMAIL_ENABLED=""
@@ -381,6 +381,8 @@ POST_SHOW_FINISHED_MESSAGE=""
 # Set custom container enviroment variables - [--env MYVAR="VAR"]
 __custom_docker_env() {
   cat <<EOF | tee | sed 's|,| --env |g' | tr '\n' ' ' | __remove_extra_spaces
+--env WEBTHEME="default-dark"
+--env WEBPASSWORD="$CONTAINER_USER_PASS"
 
 EOF
 }
