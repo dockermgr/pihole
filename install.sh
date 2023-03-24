@@ -356,8 +356,8 @@ CONTAINER_SYSCTL=""
 CONTAINER_SYSCTL+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set capabilites [CAP,OTHERCAP]
-CONTAINER_CAPABILITIES="SYS_ADMIN,SYS_TIME,"
-CONTAINER_CAPABILITIES+=""
+CONTAINER_CAPABILITIES="SYS_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW,"
+CONTAINER_CAPABILITIES+="CAP_NET_ADMIN,CAP_SYS_NICE,CAP_CHOWN"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define labels [traefik.enable=true,label=label,otherlabel=label2]
 CONTAINER_LABELS=""
@@ -382,14 +382,14 @@ POST_SHOW_FINISHED_MESSAGE=""
 __custom_docker_env() {
   cat <<EOF | tee | sed 's|,| --env |g' | tr '\n' ' ' | __remove_extra_spaces
 --env IPv6=true
---env DHCP_IPv6="true"
---env TEMPERATUREUNIT="f"
---env SOCKET_LISTENING="all"
---env DNSMASQ_LISTENING="all"
---env WEBTHEME="default-dark"
---env VIRTUAL_HOST="${CONTAINER_HOSTNAME:-$HOSTNAME}"
---env PIHOLE_DOMAIN="${CONTAINER_DOMAINNAME:-$HOSTNAME}"
---env PROXY_LOCATION="${CONTAINER_HOSTNAME:-$HOSTNAME}"
+--env DHCP_IPv6=true
+--env TEMPERATUREUNIT=f
+--env SOCKET_LISTENING=all
+--env DNSMASQ_LISTENING=all
+--env WEBTHEME=default-dark
+--env VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME}
+--env PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME}
+--env PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME}
 
 EOF
 }
