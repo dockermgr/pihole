@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202303241312-git
+##@Version           :  202303241752-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
-# @@License          :  WTFPL
+# @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Friday, Mar 24, 2023 13:12 EDT
+# @@Created          :  Friday, Mar 24, 2023 17:52 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -19,7 +19,7 @@
 # @@Template         :  installers/dockermgr
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202303241312-git"
+VERSION="202303241752-git"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
 RUN_USER="${SUDO_USER:-$USER}"
@@ -175,12 +175,12 @@ CONTAINER_SSL_CRT="${CONTAINER_SSL_CRT:-$CONTAINER_SSL_DIR/localhost.crt}"
 CONTAINER_SSL_KEY="${CONTAINER_SSL_KEY:-$CONTAINER_SSL_DIR/localhost.key}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # URL to container image - docker pull [URL]
-HUB_IMAGE_URL="pihole/pihole"
+HUB_IMAGE_URL="casjaysdevdocker/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # image tag [docker pull HUB_IMAGE_URL:tag]
 HUB_IMAGE_TAG="latest"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Set the container name Default: [casjaysdevdocker/pihole-$HUB_IMAGE_TAG]
+# Set the container name Default: [org-repo-tag]
 CONTAINER_NAME=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container timezone - Default: [America/New_York]
@@ -265,7 +265,7 @@ HOST_DOCKER_NETWORK="bridge"
 # Link to an existing container [name:alias,name]
 HOST_DOCKER_LINK=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Set listen type - Default default all [all/local/lan/docker/public] [127.0.0.1]
+# Set listen type - Default default all [all/local/lan/docker/public]
 HOST_NETWORK_ADDR="all"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup nginx proxy variables [yes/no] [yes/no] [http] [https] [yes/no]
@@ -280,20 +280,19 @@ CONTAINER_WEB_SERVER_ENABLED="yes"
 CONTAINER_WEB_SERVER_INT_PORT="80"
 CONTAINER_WEB_SERVER_SSL_ENABLED="no"
 CONTAINER_WEB_SERVER_AUTH_ENABLED="no"
-CONTAINER_WEB_SERVER_LISTEN_ON="127.0.0.1"
+CONTAINER_WEB_SERVER_LISTEN_ON="127.0.0.10"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Add service port [port] or [port:port] or [ip:port:port]
-# Only ONE of HTTP or HTTPS if web server or SERVICE port for mysql/pgsql/ftp/pgsql.
-CONTAINER_HTTP_PORT=""
-CONTAINER_HTTPS_PORT=""
+# Add service port [port]
 CONTAINER_SERVICE_PORT=""
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Add custom port [port] or [port:port]
 CONTAINER_ADD_CUSTOM_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Add service port [listen:externalPort:internalPort/[tcp,udp]]
+# Add custom listening ports [listen:externalPort:internalPort/[tcp,udp]]
 CONTAINER_ADD_CUSTOM_LISTEN="53:53/tcp 53:53/udp 69:69/udp"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set this to the protocol the the container will use [http/https/git/ftp/pgsql/mysql/mongodb]
-CONTAINER_HTTP_PROTO="http"
+CONTAINER_PROTOCOL="http"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Database settings [listen] [yes/no]
 CONTAINER_DATABASE_LISTEN=""
@@ -317,7 +316,7 @@ CONTAINER_DATABASE_LENGTH_NORMAL="12"
 # [user] [pass/random]
 CONTAINER_USER_NAME=""
 CONTAINER_USER_PASS="random"
-CONTAINER_PASS_LENGTH="16"
+CONTAINER_PASS_LENGTH="12"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container username and password env name [CONTAINER_ENV_USER_NAME=$CONTAINER_USER_NAME]
 CONTAINER_ENV_USER_NAME=""
@@ -341,7 +340,7 @@ CONTAINER_MOUNT_CONFIG_ENABLED="yes"
 CONTAINER_MOUNT_CONFIG_MOUNT_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts [/dir:/dir,/otherdir:/otherdir]
-CONTAINER_MOUNTS="$LOCAL_CONFIG_DIR/pihole:/etc/pihole:z $LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d:z "
+CONTAINER_MOUNTS="$LOCAL_CONFIG_DIR/pihole:/etc/pihole:z,$LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d:z"
 CONTAINER_MOUNTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional devices [/dev:/dev,/otherdev:/otherdev]
@@ -357,8 +356,8 @@ CONTAINER_SYSCTL=""
 CONTAINER_SYSCTL+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set capabilites [CAP,OTHERCAP]
-CONTAINER_CAPABILITIES="SYS_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW,CAP_NET_ADMIN"
-CONTAINER_CAPABILITIES+=",CAP_SYS_NICE,CAP_CHOWN"
+CONTAINER_CAPABILITIES="SYS_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW"
+CONTAINER_CAPABILITIES+=",CAP_NET_ADMIN,CAP_SYS_NICE,CAP_CHOWN"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define labels [traefik.enable=true,label=label,otherlabel=label2]
 CONTAINER_LABELS=""
@@ -382,17 +381,6 @@ POST_SHOW_FINISHED_MESSAGE=""
 # Set custom container enviroment variables - [--env MYVAR="VAR"]
 __custom_docker_env() {
   cat <<EOF | tee | sed 's|,| --env |g' | tr '\n' ' ' | __remove_extra_spaces
---env WEBTHEME="default-dark"
---env DNS_FQDN_REQUIRED="true"
---env FTLCONF_LOCAL_IPV4=$CURRENT_IP_4
---env IPv6=true
---env DHCP_IPv6="true"
---env TEMPERATUREUNIT="f"
---env SOCKET_LISTENING="all"
---env DNSMASQ_LISTENING="all"
---env VIRTUAL_HOST="${CONTAINER_HOSTNAME:-$HOSTNAME}"
---env PIHOLE_DOMAIN="${CONTAINER_DOMAINNAME:-$HOSTNAME}"
---env PROXY_LOCATION="${CONTAINER_HOSTNAME:-$HOSTNAME}"
 
 EOF
 }
@@ -400,8 +388,8 @@ EOF
 # this function will create an env file in the containers filesystem - see CONTAINER_ENV_FILE_ENABLED
 __container_import_variables() {
   [ "$CONTAINER_ENV_FILE_ENABLED" = "yes" ] || return 0
-  local base_file="$1"
-  local base_dir="$(realpath "$DATADIR")"
+  local base_file="$1" base_dir=""
+  base_dir="$(realpath "$DATADIR")"
   [ -d "$base_dir" ] || mkdir -p "$base_dir"
   cat <<EOF | __remove_extra_spaces | tee "$base_dir/$base_file" &>/dev/null
 
@@ -434,7 +422,7 @@ EOF
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define extra functions
 __rport() {
-  local port
+  local port=""
   port="$(__port)"
   while :; do
     { [ $port -lt 50000 ] && [ $port -gt 50999 ]; } && port="$(__port)"
@@ -475,15 +463,7 @@ mkdir -p "$DOCKERMGR_CONFIG_DIR/installed"
 mkdir -p "$DOCKERMGR_CONFIG_DIR/containers"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # variable cleanup
-CONTAINER_ENV="${CONTAINER_ENV//  / }"
-CONTAINER_LABELS="${CONTAINER_LABELS//  / }"
-CONTAINER_SYSCTL="${CONTAINER_SYSCTL//  / }"
-CONTAINER_MOUNTS="${CONTAINER_MOUNTS//  / }"
-CONTAINER_DEVICES="${CONTAINER_DEVICES//  / }"
-CONTAINER_COMMANDS="${CONTAINER_COMMANDS//  / }"
-CONTAINER_CAPABILITIES="${CONTAINER_CAPABILITIES//  / }"
-DOCKER_CUSTOM_ARGUMENTS="${DOCKER_CUSTOM_ARGUMENTS//  / }"
-CONTAINER_ADD_CUSTOM_PORT="${CONTAINER_ADD_CUSTOM_PORT//  / }"
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # rewrite variables from env file
 CONTAINER_USER_NAME="${ENV_CONTAINER_USER_NAME:-$CONTAINER_USER_NAME}"
@@ -497,6 +477,7 @@ CONTAINER_DATABASE_PASS_NORMAL="${ENV_CONTAINER_DATABASE_PASS_NORMAL:-$CONTAINER
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup arrays
 DOCKER_SET_PUBLISH=""
+CONTAINER_CONTAINER_ENV_PORTS=("")
 DOCKER_SET_TMP_PUBLISH=()
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Ensure that the image has a tag
@@ -632,7 +613,7 @@ fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount sound card in container
 if [ "$DOCKER_SOUND_ENABLED" = "yes" ]; then
-  if [ -z "$HOST_SOUND_DEVICE_FILE" ] && [ -f "/dev/snd" ]; then
+  if [ -z "$HOST_SOUND_DEVICE_FILE" ]; then
     HOST_SOUND_DEVICE_FILE="/dev/snd"
   fi
   if [ -z "$CONTAINER_SOUND_DEVICE_FILE" ]; then
@@ -644,14 +625,14 @@ if [ "$DOCKER_SOUND_ENABLED" = "yes" ]; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup display if enabled
-if [ "$CONTAINER_X11_ENABLED" = "yes" ] && [ -f "$HOST_X11_SOCKET" ] && [ -f "$HOST_X11_XAUTH" ]; then
+if [ "$CONTAINER_X11_ENABLED" = "yes" ]; then
   if [ -z "$HOST_X11_DISPLAY" ] && [ -n "$DISPLAY" ]; then
     HOST_X11_DISPLAY="${DISPLAY//*:/}"
   fi
-  if [ -z "$HOST_X11_SOCKET" ] && [ -f "/tmp/.X11-unix" ]; then
+  if [ -z "$HOST_X11_SOCKET" ]; then
     HOST_X11_SOCKET="/tmp/.X11-unix"
   fi
-  if [ -z "$HOST_X11_XAUTH" ] && [ -f "$HOME/.Xauthority" ]; then
+  if [ -z "$HOST_X11_XAUTH" ]; then
     HOST_X11_XAUTH="$HOME/.Xauthority"
   fi
   if [ -n "$HOST_X11_DISPLAY" ] && [ -n "$HOST_X11_SOCKET" ] && [ -n "$HOST_X11_XAUTH" ]; then
@@ -777,9 +758,9 @@ if [ "$CONTAINER_WEB_SERVER_ENABLED" = "yes" ]; then
     DOCKER_SET_OPTIONS+="--env WEB_PORT=${CONTAINER_WEB_SERVER_INT_PORT//,/ } "
   fi
   if [ "$CONTAINER_WEB_SERVER_SSL_ENABLED" = "yes" ]; then
-    CONTAINER_HTTP_PROTO="https"
+    CONTAINER_PROTOCOL="https"
   else
-    CONTAINER_HTTP_PROTO="http"
+    CONTAINER_PROTOCOL="http"
   fi
   if [ -z "$CONTAINER_WEB_SERVER_LISTEN_ON" ]; then
     CONTAINER_WEB_SERVER_LISTEN_ON="$HOST_LISTEN_ADDR"
@@ -789,7 +770,7 @@ fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # SSL setup
 NGINX_PROXY_URL=""
-PROXY_HTTP_PROTO="$CONTAINER_HTTP_PROTO"
+PROXY_HTTP_PROTO="$CONTAINER_PROTOCOL"
 if [ "$NGINX_SSL" = "yes" ]; then
   if [ "$SSL_ENABLED" = "yes" ]; then
     PROXY_HTTP_PROTO="https"
@@ -805,25 +786,16 @@ if [ "$NGINX_SSL" = "yes" ]; then
     fi
   fi
 else
-  CONTAINER_HTTP_PROTO="${CONTAINER_HTTP_PROTO:-http}"
+  CONTAINER_PROTOCOL="${CONTAINER_PROTOCOL:-http}"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup ports
 SET_SERVER_PORTS_TMP=""
-if [ -n "$CONTAINER_HTTP_PORT" ]; then
-  SET_SERVER_PORTS_TMP+="${CONTAINER_HTTP_PORT//,/ }"
-fi
-if [ -n "$CONTAINER_HTTPS_PORT" ]; then
-  SET_SERVER_PORTS_TMP+="${CONTAINER_HTTPS_PORT//,/ }"
-fi
-if [ -n "$CONTAINER_SERVICE_PORT" ]; then
-  SET_SERVER_PORTS_TMP+="${CONTAINER_SERVICE_PORT//,/ }"
-fi
 if [ -n "$CONTAINER_ADD_CUSTOM_PORT" ]; then
   SET_SERVER_PORTS_TMP+="${CONTAINER_ADD_CUSTOM_PORT//,/ }"
 fi
 if [ -n "$SET_SERVER_PORTS_TMP" ]; then
-  SET_SERVER_PORTS="${SET_SERVER_PORTS_TMP//  / }"
+  SET_SERVER_PORTS="$SET_SERVER_PORTS_TMP"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup the listen address
@@ -832,7 +804,6 @@ if [ -n "$HOST_DEFINE_LISTEN" ]; then
 fi
 if [ -n "$CONTAINER_ADD_CUSTOM_LISTEN" ]; then
   CONTAINER_ADD_CUSTOM_LISTEN="${CONTAINER_ADD_CUSTOM_LISTEN//,/ }"
-  CONTAINER_ADD_CUSTOM_LISTEN="${CONTAINER_ADD_CUSTOM_LISTEN//  / }"
 fi
 HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR:-$HOST_DEFINE_LISTEN}"
 HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR//0.0.0.0/$SET_LAN_IP}"
@@ -840,7 +811,7 @@ HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR//:*/}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
 if [ "$CONTAINER_HTTPS_PORT" != "" ]; then
-  CONTAINER_HTTP_PROTO="https"
+  CONTAINER_PROTOCOL="https"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Database setup
@@ -853,67 +824,67 @@ if [ -z "$DATABASE_BASE_DIR" ]; then
 fi
 if [ "$CONTAINER_REDIS_ENABLED" = "yes" ]; then
   SHOW_DATABASE_INFO="true"
+  CONTAINER_ENV_PORTS+=("6379")
   CONTAINER_DATABASE_ENABLED="yes"
   CONTAINER_DATABASE_PROTO="redis://$HOST_LISTEN_ADDR:6379"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_DATABASE_LISTEN:6379:6379")
   DATABASE_DIR_REDIS="${DATABASE_DIR_REDIS:-$DATABASE_BASE_DIR/redis}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR/db/redis:/$DATABASE_DIR_REDIS:z "
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=6379 "
   DOCKER_SET_OPTIONS+="--env DATABASE_DIR_REDIS=$DATABASE_DIR_REDIS "
   MESSAGE_REDIS="Database files are saved to:      $DATABASE_DIR_REDIS"
 fi
 if [ "$CONTAINER_POSTGRES_ENABLED" = "yes" ]; then
   SHOW_DATABASE_INFO="true"
+  CONTAINER_ENV_PORTS+=("5432")
   CONTAINER_DATABASE_ENABLED="yes"
   CONTAINER_DATABASE_PROTO="postgresql://$HOST_LISTEN_ADDR:5432"
   DOCKER_SET_TMP_PUBLISH+=(--publish "$CONTAINER_DATABASE_LISTEN:5432:5432")
   DATABASE_DIR_POSTGRES="${DATABASE_DIR_POSTGRES:-$DATABASE_BASE_DIR/pgsql}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR/db/postgres:/$DATABASE_DIR_POSTGRES:z "
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=5432 "
   DOCKER_SET_OPTIONS+="--env DATABASE_DIR_POSTGRES=$DATABASE_DIR_POSTGRES "
   MESSAGE_PGSQL="Database files are saved to:      $DATABASE_DIR_POSTGRES"
 fi
 if [ "$CONTAINER_MARIADB_ENABLED" = "yes" ]; then
   SHOW_DATABASE_INFO="true"
+  CONTAINER_ENV_PORTS+=("3306")
   CONTAINER_DATABASE_ENABLED="yes"
   CONTAINER_DATABASE_PROTO="mysql://$HOST_LISTEN_ADDR:3306"
   DOCKER_SET_TMP_PUBLISH+=(--publish "$CONTAINER_DATABASE_LISTEN:3306:3306")
   DATABASE_DIR_MARIADB="${DATABASE_DIR_MARIADB:-$DATABASE_BASE_DIR/mariadb}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR/db/mariadb:/$DATABASE_DIR_MARIADB:z "
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=3306 "
   DOCKER_SET_OPTIONS+="--env DATABASE_DIR_MARIADB=$DATABASE_DIR_MARIADB "
   MESSAGE_MARIADB="Database files are saved to:      $DATABASE_DIR_MARIADB"
 fi
 if [ "$CONTAINER_COUCHDB_ENABLED" = "yes" ]; then
   SHOW_DATABASE_INFO="true"
+  CONTAINER_ENV_PORTS+=("5984")
   CONTAINER_DATABASE_ENABLED="yes"
   CONTAINER_DATABASE_PROTO="http://$HOST_LISTEN_ADDR:5984"
   DOCKER_SET_TMP_PUBLISH+=(--publish "$CONTAINER_DATABASE_LISTEN:5984:5984")
   DATABASE_DIR_COUCHDB="${DATABASE_DIR_COUCHDB:-$DATABASE_BASE_DIR/couchdb}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR/db/couchdb:/$DATABASE_DIR_COUCHDB:z "
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=5984 "
   DOCKER_SET_OPTIONS+="--env DATABASE_DIR_COUCHDB=$DATABASE_DIR_COUCHDB "
   MESSAGE_COUCHDB="Database files are saved to:      $DATABASE_DIR_COUCHDB"
 fi
 if [ "$CONTAINER_MONGODB_ENABLED" = "yes" ]; then
   SHOW_DATABASE_INFO="true"
+  CONTAINER_ENV_PORTS+=("27017")
   CONTAINER_DATABASE_ENABLED="yes"
   CONTAINER_DATABASE_PROTO="mongodb://$HOST_LISTEN_ADDR:27017"
   DOCKER_SET_TMP_PUBLISH+=(--publish "$CONTAINER_DATABASE_LISTEN:27017:27017")
   DATABASE_DIR_MONGODB="${DATABASE_DIR_MONGODB:-$DATABASE_BASE_DIR/mongodb}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR/db/mongodb:/$DATABASE_DIR_MONGODB:z "
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=27017 "
   DOCKER_SET_OPTIONS+="--env DATABASE_DIR_MONGODB=$DATABASE_DIR_MONGODB "
   MESSAGE_MONGODB="Database files are saved to:      $DATABASE_DIR_MONGODB"
 fi
 if [ "$CONTAINER_SUPABASE_ENABLED" = "yes" ]; then
   SHOW_DATABASE_INFO="true"
+  CONTAINER_ENV_PORTS+=("5432")
   CONTAINER_DATABASE_ENABLED="yes"
   CONTAINER_DATABASE_PROTO="http://$HOST_LISTEN_ADDR:8000"
   DOCKER_SET_TMP_PUBLISH+=(--publish "$CONTAINER_DATABASE_LISTEN:5432:5432")
   DATABASE_DIR_SUPABASE="${DATABASE_DIR_SUPABASE:-$DATABASE_BASE_DIR/supabase}"
   DOCKER_SET_OPTIONS+="--volume $LOCAL_DATA_DIR/db/supabase:/$DATABASE_DIR_SUPABASE:z "
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=5432 "
   DOCKER_SET_OPTIONS+="--env DATABASE_DIR_SUPABASE=$DATABASE_DIR_SUPABASE "
   MESSAGE_SUPABASE="Database files are saved to:      $DATABASE_DIR_SUPABASE"
 fi
@@ -968,11 +939,6 @@ if [ -n "$CONTAINER_USER_PASS" ]; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup email variables
-if [ "$CONTAINER_EMAIL_ENABLED" = "yes" ]; then
-  CONTAINER_ADD_CUSTOM_PORT="$CONTAINER_EMAIL_PORTS "
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=\"${CONTAINER_EMAIL_PORTS//,/ }\" "
-  DOCKER_SET_OPTIONS+="--env EMAIL_ENABLED=$CONTAINER_EMAIL_ENABLED "
-fi
 if [ -n "$CONTAINER_EMAIL_USER" ]; then
   DOCKER_SET_OPTIONS+="--env EMAIL_ADMIN=$CONTAINER_EMAIL_USER@ "
 fi
@@ -984,6 +950,11 @@ if [ -n "$CONTAINER_EMAIL_RELAY" ]; then
 fi
 if [ -z "$CONTAINER_EMAIL_PORTS" ]; then
   CONTAINER_EMAIL_PORTS="25,465,587"
+fi
+if [ "$CONTAINER_EMAIL_ENABLED" = "yes" ]; then
+  DOCKER_SET_OPTIONS+="--env EMAIL_ENABLED=$CONTAINER_EMAIL_ENABLED "
+  CONTAINER_EMAIL_PORTS="$(echo "${CONTAINER_EMAIL_PORTS//,/ }" | tr ' ' '\n')"
+  CONTAINER_ENV_PORTS+=("$CONTAINER_EMAIL_PORTS")
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # process list
@@ -1039,7 +1010,6 @@ fi
 if [ -n "$CONTAINER_MOUNTS" ]; then
   DOCKER_SET_MNT=""
   CONTAINER_MOUNTS="${CONTAINER_MOUNTS//,/ }"
-  CONTAINER_MOUNTS="${CONTAINER_MOUNTS//  / }"
   for mnt in $CONTAINER_MOUNTS; do
     if [ "$mnt" != "" ] && [ "$mnt" != " " ]; then
       echo "$mnt" | grep -q ':' || mnt="$mnt:$mnt"
@@ -1052,7 +1022,6 @@ fi
 if [ -n "$CONTAINER_OPT_MOUNT_VAR" ]; then
   DOCKER_SET_MNT=""
   CONTAINER_OPT_MOUNT_VAR="${CONTAINER_OPT_MOUNT_VAR//,/ }"
-  CONTAINER_OPT_MOUNT_VAR="${CONTAINER_OPT_MOUNT_VAR//  / }"
   for mnt in $CONTAINER_OPT_MOUNT_VAR; do
     if [ "$mnt" != "" ] && [ "$mnt" != " " ]; then
       echo "$mnt" | grep -q ':' || mnt="$mnt:$mnt"
@@ -1066,7 +1035,6 @@ fi
 if [ -n "$CONTAINER_DEVICES" ]; then
   DOCKER_SET_DEV=""
   CONTAINER_DEVICES="${CONTAINER_DEVICES//,/ }"
-  CONTAINER_DEVICES="${CONTAINER_DEVICES//  / }"
   for dev in $CONTAINER_DEVICES; do
     if [ "$dev" != "" ] && [ "$dev" != " " ]; then
       echo "$dev" | grep -q ':' || dev="$dev:$dev"
@@ -1080,7 +1048,6 @@ fi
 if [ -n "$CONTAINER_ENV" ]; then
   DOCKER_SET_ENV=""
   CONTAINER_ENV="${CONTAINER_ENV//,/ }"
-  CONTAINER_ENV="${CONTAINER_ENV//  / }"
   for env in $CONTAINER_ENV; do
     if [ "$env" != "" ] && [ "$env" != " " ]; then
       DOCKER_SET_ENV+="--env $env "
@@ -1090,7 +1057,6 @@ if [ -n "$CONTAINER_ENV" ]; then
 fi
 if [ -n "$CONTAINER_OPT_ENV_VAR" ]; then
   CONTAINER_OPT_ENV_VAR="${CONTAINER_OPT_ENV_VAR//,/ }"
-  CONTAINER_OPT_ENV_VAR="${CONTAINER_OPT_ENV_VAR//  / }"
   for env in $CONTAINER_OPT_ENV_VAR; do
     if [ "$env" != "" ] && [ "$env" != " " ]; then
       DOCKER_SET_ENV+="--env $env "
@@ -1103,7 +1069,6 @@ fi
 if [ -n "$CONTAINER_CAPABILITIES" ]; then
   DOCKER_SET_CAP=""
   CONTAINER_CAPABILITIES="${CONTAINER_CAPABILITIES//,/ }"
-  CONTAINER_CAPABILITIES="${CONTAINER_CAPABILITIES//  / }"
   for cap in $CONTAINER_CAPABILITIES; do
     if [ "$cap" != "" ] && [ "$cap" != " " ]; then
       DOCKER_SET_CAP+="--cap-add $cap "
@@ -1116,7 +1081,6 @@ fi
 if [ -n "$CONTAINER_SYSCTL" ]; then
   DOCKER_SET_SYSCTL=""
   CONTAINER_SYSCTL="${CONTAINER_SYSCTL//,/ }"
-  CONTAINER_SYSCTL="${CONTAINER_SYSCTL//  / }"
   for sysctl in $CONTAINER_SYSCTL; do
     if [ "$sysctl" != "" ] && [ "$sysctl" != " " ]; then
       DOCKER_SET_SYSCTL+="--sysctl $sysctl "
@@ -1129,7 +1093,6 @@ fi
 if [ -n "$CONTAINER_LABELS" ]; then
   DOCKER_SET_LABELS=""
   CONTAINER_LABELS="${CONTAINER_LABELS//,/ }"
-  CONTAINER_LABELS="${CONTAINER_LABELS//  / }"
   for label in $CONTAINER_LABELS; do
     if [ "$label" != "" ] && [ "$label" != " " ]; then
       DOCKER_SET_LABELS+="--label $label "
@@ -1141,7 +1104,6 @@ fi
 # Setup optional ports
 if [ -n "$CONTAINER_OPT_PORT_VAR" ]; then
   CONTAINER_OPT_PORT_VAR="${CONTAINER_OPT_PORT_VAR//,/ }"
-  CONTAINER_OPT_PORT_VAR="${CONTAINER_OPT_PORT_VAR//  / }"
   if [ -n "$CONTAINER_OPT_PORT_VAR" ]; then
     for set_port in $CONTAINER_OPT_PORT_VAR; do
       if [ "$set_port" != "" ] && [ "$set_port" != " " ]; then
@@ -1179,8 +1141,8 @@ fi
 if [ -n "$CONTAINER_ADD_CUSTOM_LISTEN" ]; then
   for set_port in $CONTAINER_ADD_CUSTOM_LISTEN; do
     if [ "$set_port" != " " ] && [ -n "$set_port" ]; then
-      port=$set_port
-      echo "$port" | grep -q ':' || port="${port//\/*/}:$port"
+      port=${set_port//\/*/}
+      echo "$port" | grep -q ':' || port="$port:$port"
       TYPE="$(echo "$set_port" | grep '/' | awk -F '/' '{print $NF}' | head -n1 | grep '^' || echo '')"
       if [ -z "$TYPE" ]; then
         DOCKER_SET_TMP_PUBLISH+=("--publish $port")
@@ -1195,15 +1157,14 @@ fi
 # container web server configuration
 SET_WEB_PORT=""
 NGINX_PROXY_PORT=""
-CLEANUP_PORT="${CONTAINER_WEB_SERVER_INT_PORT:-${CONTAINER_SERVICE_PORT:-$HOST_SERVICE_PORT}}"
+CLEANUP_PORT="${CONTAINER_WEB_SERVER_INT_PORT:-$CONTAINER_SERVICE_PORT}"
 CLEANUP_PORT="${CLEANUP_PORT//\/*/}"
 PRETTY_PORT="$CLEANUP_PORT"
 if [ "$CONTAINER_WEB_SERVER_ENABLED" = "yes" ]; then
   CONTAINER_WEB_SERVER_INT_PORT="${CONTAINER_WEB_SERVER_INT_PORT//,/ }"
-  CONTAINER_WEB_SERVER_INT_PORT="${CONTAINER_WEB_SERVER_INT_PORT//  / }"
   for set_port in $CONTAINER_WEB_SERVER_INT_PORT; do
     if [ "$set_port" != " " ] && [ -n "$set_port" ]; then
-      port=$set_port
+      port=${set_port//\/*/}
       random_port="$(__rport)"
       TYPE="$(echo "$port" | grep '/' | awk -F '/' '{print $NF}' | head -n1 | grep '^' || echo '')"
       if [ -z "$TYPE" ]; then
@@ -1252,9 +1213,10 @@ DOCKER_SET_PORTS_ENV_TMP="$(echo "$DOCKER_SET_PORTS_ENV_TMP" | tr ',' '\n' | gre
 DOCKER_SET_PORTS_ENV="${DOCKER_SET_PORTS_ENV_TMP//,/ }"
 DOCKER_SET_PORTS_ENV="${DOCKER_SET_PORTS_ENV//*:/}"
 DOCKER_SET_PORTS_ENV="$(__trim "${DOCKER_SET_PORTS_ENV[*]}")"
-if [ -n "$DOCKER_SET_PORTS_ENV" ]; then
-  DOCKER_SET_OPTIONS+="--env ENV_PORTS=\"$DOCKER_SET_PORTS_ENV\""
-  unset DOCKER_SET_PORTS_ENV
+ENV_PORTS="$(echo "$DOCKER_SET_PORTS_ENV" "${CONTAINER_ENV_PORTS[*]}" | tr ' ' '\n' | sort -u)"
+if [ -n "$ENV_PORTS" ]; then
+  DOCKER_SET_OPTIONS+="--env ENV_PORTS=\"$ENV_PORTS\""
+  unset DOCKER_SET_PORTS_ENV ENV_PORTS
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DOCKER_CUSTOM_ARRAY="$(__custom_docker_env)"
@@ -1273,9 +1235,10 @@ DOCKER_SET_OPTIONS="$(__trim "${DOCKER_SET_OPTIONS[*]:-}")"
 CONTAINER_COMMANDS="$(__trim "${CONTAINER_COMMANDS[*]:-}")"
 DOCKER_SET_CUSTOM="$(__trim "${DOCKER_CUSTOM_ARRAY[*]:-}")"
 DOCKER_SET_PUBLISH="$(__trim "${DOCKER_SET_TMP_PUBLISH[*]:-}")"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# set docker commands
 EXECUTE_PRE_INSTALL="docker stop $CONTAINER_NAME;docker rm -f $CONTAINER_NAME"
 EXECUTE_DOCKER_CMD="docker run -d $DOCKER_SET_OPTIONS $DOCKER_SET_CUSTOM $DOCKER_SET_LINK $DOCKER_SET_LABELS $DOCKER_SET_CAP $DOCKER_SET_SYSCTL $DOCKER_SET_DEV $DOCKER_SET_MNT $DOCKER_SET_ENV $DOCKER_SET_PUBLISH $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS"
-EXECUTE_DOCKER_CMD="$(__trim "$EXECUTE_DOCKER_CMD")"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run functions
 __container_import_variables "$CONTAINER_ENV_FILE_MOUNT"
@@ -1304,7 +1267,7 @@ fi
 # Write the container name to file
 echo "$CONTAINER_NAME" >"$DOCKERMGR_CONFIG_DIR/installed/$APPNAME"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Copy over data files - keep the same stucture as -v dataDir/mnt:/mount
+# Copy over data files - keep the same stucture as -v DATADIR/mnt:/mnt
 if [ -d "$INSTDIR/rootfs" ] && [ ! -f "$DATADIR/.installed" ]; then
   printf_yellow "Copying files to $DATADIR"
   __sudo cp -Rf "$INSTDIR/rootfs/." "$DATADIR/" &>/dev/null
@@ -1379,13 +1342,14 @@ if [ -w "$NGINX_DIR/vhosts.d" ]; then
   else
     NGINX_PROXY_URL=""
   fi
-  SERVER_URL="$CONTAINER_HTTP_PROTO://$CONTAINER_HOSTNAME:$PRETTY_PORT"
-  [ -f "$NGINX_DIR/vhosts.d/$CONTAINER_HOSTNAME.conf" ] && NGINX_PROXY_URL="$CONTAINER_HTTP_PROTO://$CONTAINER_HOSTNAME"
+  SERVER_URL="$CONTAINER_PROTOCOL://$CONTAINER_HOSTNAME:$PRETTY_PORT"
+  [ -f "$NGINX_DIR/vhosts.d/$CONTAINER_HOSTNAME.conf" ] && NGINX_PROXY_URL="$CONTAINER_PROTOCOL://$CONTAINER_HOSTNAME"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # finalize
 if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps; then
-  SET_PORT="$(echo "${DOCKER_SET_PUBLISH//--publish /}" | tr ' ' '\n' | sort -u)"
+  DOCKER_PORTS="$(__trim "${DOCKER_SET_PUBLISH//--publish/}")"
+  SET_PORT="$(echo "$DOCKER_PORTS" | tr ' ' '\n' | sort -u | grep -v '^$')"
   printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
   printf_yellow "The container name is:          $CONTAINER_NAME"
   printf_yellow "The container is listening on:  $HOST_LISTEN_ADDR"
