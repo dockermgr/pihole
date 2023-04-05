@@ -336,7 +336,7 @@ CONTAINER_PASS_LENGTH="18"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container username and password env name - [CONTAINER_ENV_USER_NAME=$CONTAINER_USER_NAME]
 CONTAINER_ENV_USER_NAME=""
-CONTAINER_ENV_PASS_NAME=""
+CONTAINER_ENV_PASS_NAME="WEBPASSWORD"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # mail settings - [yes/no] [user] [domainname] [server]
 CONTAINER_EMAIL_ENABLED=""
