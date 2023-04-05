@@ -19,9 +19,9 @@ dockermgr update pihole
 OR
 
 ```shell
-mkdir -p "$HOME/.local/share/srv/docker/pihole/dataDir"
+mkdir -p "$HOME/.local/share/srv/docker/pihole/rootfs"
 git clone "https://github.com/dockermgr/pihole" "$HOME/.local/share/CasjaysDev/dockermgr/pihole"
-cp -Rfva "$HOME/.local/share/CasjaysDev/dockermgr/pihole/dataDir/." "$HOME/.local/share/srv/docker/pihole/dataDir/"
+cp -Rfva "$HOME/.local/share/CasjaysDev/dockermgr/pihole/rootfs/." "$HOME/.local/share/srv/docker/pihole/rootfs/"
 ```
 
 ## via command line  
@@ -34,8 +34,8 @@ docker run -d \
 --name casjaysdevdocker-pihole \
 --hostname casjaysdev-pihole \
 -e TZ=${TIMEZONE:-America/New_York} \
--v $HOME/.local/share/srv/docker/pihole/dataDir/data:/data:z \
--v $HOME/.local/share/srv/docker/pihole/dataDir/config:/config:z \
+-v $HOME/.local/share/srv/docker/pihole/rootfs/data:/data:z \
+-v $HOME/.local/share/srv/docker/pihole/rootfs/config:/config:z \
 -p 80:80 \
 casjaysdevdocker/pihole:latest
 ```
@@ -52,8 +52,8 @@ services:
       - TZ=America/New_York
       - HOSTNAME=casjaysdev-pihole
     volumes:
-      - $HOME/.local/share/srv/docker/pihole/dataDir/data:/data:z
-      - $HOME/.local/share/srv/docker/pihole/dataDir/config:/config:z
+      - $HOME/.local/share/srv/docker/pihole/rootfs/data:/data:z
+      - $HOME/.local/share/srv/docker/pihole/rootfs/config:/config:z
     ports:
       - 80:80
     restart: always
