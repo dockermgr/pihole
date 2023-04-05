@@ -478,7 +478,6 @@ execute "run_pre_install" "Running pre-installation commands"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ensure_dirs
 ensure_perms
-chmod -Rf 777 "$APPDIR"
 mkdir -p "$LOCAL_DATA_DIR"
 mkdir -p "$LOCAL_CONFIG_DIR"
 mkdir -p "$DOCKERMGR_CONFIG_DIR/env"
@@ -486,6 +485,11 @@ mkdir -p "$DOCKERMGR_CONFIG_DIR/secure"
 mkdir -p "$DOCKERMGR_CONFIG_DIR/scripts"
 mkdir -p "$DOCKERMGR_CONFIG_DIR/installed"
 mkdir -p "$DOCKERMGR_CONFIG_DIR/containers"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# fix directory permissions
+chmod -f 777 "$APPDIR"
+chmod -f 777 "$LOCAL_DATA_DIR"
+chmod -f 777 "$LOCAL_CONFIG_DIR"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # variable cleanup
 
