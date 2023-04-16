@@ -5,13 +5,13 @@
 # shellcheck disable=SC2155
 # shellcheck disable=SC2199
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202304161017-git
+##@Version           :  202304161043-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Sunday, Apr 16, 2023 10:17 EDT
+# @@Created          :  Sunday, Apr 16, 2023 10:43 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -23,7 +23,7 @@
 # @@Template         :  installers/dockermgr
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202304161017-git"
+VERSION="202304161043-git"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
 RUN_USER="${SUDO_USER:-$USER}"
@@ -293,7 +293,7 @@ HOST_NETWORK_ADDR="all"
 CONTAINER_PROTOCOL="http"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set containers dns [127.0.0.1,1.1.1.1,8.8.8.8]
-CONTAINER_DNS=""
+CONTAINER_DNS="127.0.0.1,1.1.1.1"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup nginx proxy variables - [yes/no] [yes/no] [http] [https] [yes/no]
 HOST_NGINX_ENABLED="yes"
@@ -607,16 +607,21 @@ __test_public_reachable() {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __create_docker_script() {
   [ -n "$EXECUTE_DOCKER_CMD" ] || return
-  cat <<EOF | sed 's/ --/\n  --/g;s| -d| -d \\|g' | grep -v '^$' | sed '/  --/ s/$/ \\/' | sed "s|$HUB_IMAGE_URL:$HUB_IMAGE_TAG.*|$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS|g" | grep '^' >"$DOCKERMGR_INSTALL_SCRIPT"
+  create_docker_script_message_pre="${create_docker_script_message_pre:-Failed to execute $EXECUTE_PRE_INSTALL}"
+  create_docker_script_message_post="${create_docker_script_message_post:-Failed to create $CONTAINER_NAME}"
+  cat <<EOF | sed 's/ --/\n  --/g;s| -d| -d \\|g' | grep -v '^$' | sed '/  --/ s/$/ \\/' | sed "s|$HUB_IMAGE_URL:$HUB_IMAGE_TAG.* |$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS|g" | grep '^' >"$DOCKERMGR_INSTALL_SCRIPT"
 #!/usr/bin/env bash
 # Install script for $CONTAINER_NAME
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 $EXECUTE_PRE_INSTALL
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+statusCode=\$?
+[ \$statusCode -eq 0 ] || { echo "$create_docker_script_message_pre" >&2 && exit 1; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 $EXECUTE_DOCKER_CMD
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 statusCode=\$?
-[ \$statusCode -eq 0 ] || { echo "Failed to create $CONTAINER_NAME" >&2 && exit 1; }
+[ \$statusCode -eq 0 ] || { echo "$create_docker_script_message_post" >&2 && exit 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 docker ps -a 2>&1 | grep -q "$CONTAINER_NAME" || { echo "$CONTAINER_NAME is not running" >&2 && exit 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -624,6 +629,7 @@ exit 0
 # end script
 
 EOF
+  unset create_docker_script_message_pre create_docker_script_message_post
   [ -f "$DOCKERMGR_INSTALL_SCRIPT" ] || return 1
   chmod -Rf 755 "$DOCKERMGR_INSTALL_SCRIPT"
 }
@@ -1704,9 +1710,10 @@ DOCKER_GET_OPTIONS="$(__trim "${DOCKER_SET_OPTIONS[*]:-}")"                     
 DOCKER_GET_CUSTOM="$(__trim "${DOCKER_CUSTOM_ARRAY[*]:-}")"                                   # --tty --rm --interactive
 DOCKER_GET_PUBLISH="$(__trim "${DOCKER_SET_PUBLISH[*]:-}")"                                   # --publish ports
 CONTAINER_COMMANDS="$(__trim "${CONTAINER_COMMANDS[*]:-}")"                                   # pass command to container
+[ -n "$CONTAINER_COMMANDS" ] || CONTAINER_COMMANDS="    "
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # set docker commands - script creation - execute command #
-SET_EXECUTE_PRE_INSTALL="$(echo "docker stop $CONTAINER_NAME;docker rm -f $CONTAINER_NAME;docker pull $HUB_IMAGE_URL:$HUB_IMAGE_TAG || { echo \"Failed to pull $HUB_IMAGE_URL:$HUB_IMAGE_TAG\" >&2 && exit 1; }")"
+SET_EXECUTE_PRE_INSTALL="$(echo "docker stop $CONTAINER_NAME;docker rm -f $CONTAINER_NAME;docker pull $HUB_IMAGE_URL:$HUB_IMAGE_TAG || { echo \"Failed to pull $HUB_IMAGE_URL with tag $HUB_IMAGE_TAG\" >&2 && exit 1; }")"
 SET_EXECUTE_DOCKER_CMD="$(echo "docker run -d $DOCKER_GET_OPTIONS $DOCKER_GET_CUSTOM $DOCKER_GET_LINK $DOCKER_GET_LABELS $DOCKER_GET_CAP $DOCKER_GET_SYSCTL $DOCKER_GET_DEV $DOCKER_SET_DNS $DOCKER_GET_MNT $DOCKER_GET_ENV $DOCKER_GET_PUBLISH $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS")"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run functions
@@ -1790,8 +1797,10 @@ if [ "$DOCKER_COMPOSE_CMD" = "true" ] && [ -f "$INSTDIR/docker-compose.yml" ]; t
     docker compose pull &>/dev/null
     docker compose up -d &>/dev/null
     CONTAINER_INSTALLED="true"
-    EXECUTE_PRE_INSTALL="$(echo 'cd "'$INSTDIR'" || { echo "Failed to cd into '$INSTDIR'" && exit 1}')"
-    EXECUTE_DOCKER_CMD="$(echo 'docker compose pull && docker compose up -d || { echo "Failed to bring up containers" && exit 1 }')"
+    create_docker_script_message_pre="Failed to cd into $INSTDIR"
+    create_docker_script_message_post="Failed to bring up containers"
+    EXECUTE_PRE_INSTALL="$(echo 'cd "'$INSTDIR'"')"
+    EXECUTE_DOCKER_CMD="$(echo 'docker compose pull && docker compose up -d')"
   fi
 elif [ -n "$(type -P docker-compose)" ] && [ -f "$INSTDIR/docker-compose.yml" ]; then
   printf_yellow "Installing containers using docker-compose"
@@ -1800,15 +1809,14 @@ elif [ -n "$(type -P docker-compose)" ] && [ -f "$INSTDIR/docker-compose.yml" ];
     docker-compose pull &>/dev/null
     docker-compose up -d &>/dev/null
     CONTAINER_INSTALLED="true"
-    EXECUTE_PRE_INSTALL="$(echo 'cd "'$INSTDIR'" || { echo "Failed to cd into '$INSTDIR'" && exit 1 }')"
-    EXECUTE_DOCKER_CMD="$(echo 'docker-compose pull && docker-compose up -d || { echo "Failed to bring up containers" && exit 1 }')"
+    create_docker_script_message_pre="Failed to cd into $INSTDIR"
+    create_docker_script_message_post="Failed to bring up containers"
+    EXECUTE_PRE_INSTALL="$(echo 'cd "'$INSTDIR'"')"
+    EXECUTE_DOCKER_CMD="$(echo 'docker-compose pull && docker-compose up -d')"
   fi
-elif [ -f "$DOCKERMGR_INSTALL_SCRIPT" ] && [ "$DOCKERMGR_ENABLE_INSTALL_SCRIPT" = "yes" ]; then
-  EXECUTE_DOCKER_SCRIPT="$DOCKERMGR_INSTALL_SCRIPT"
-else
-  EXECUTE_DOCKER_SCRIPT="$EXECUTE_DOCKER_CMD"
 fi
 __create_docker_script
+EXECUTE_DOCKER_SCRIPT="$EXECUTE_DOCKER_CMD"
 if [ -n "$EXECUTE_DOCKER_SCRIPT" ]; then
   EXECUTE_PRE_INSTALL="$(__trim "${EXECUTE_PRE_INSTALL//||*/}")"
   EXECUTE_DOCKER_SCRIPT="$(__trim "${EXECUTE_DOCKER_SCRIPT//||*/}")"
