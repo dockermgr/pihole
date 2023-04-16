@@ -5,13 +5,13 @@
 # shellcheck disable=SC2155
 # shellcheck disable=SC2199
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202304160930-git
+##@Version           :  202304161017-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Sunday, Apr 16, 2023 09:30 EDT
+# @@Created          :  Sunday, Apr 16, 2023 10:17 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -23,7 +23,7 @@
 # @@Template         :  installers/dockermgr
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202304160930-git"
+VERSION="202304161017-git"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
 RUN_USER="${SUDO_USER:-$USER}"
@@ -184,7 +184,7 @@ CONTAINER_SSL_CRT=""
 CONTAINER_SSL_KEY=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # URL to container image - docker pull - [URL]
-HUB_IMAGE_URL="pihole/pihole"
+HUB_IMAGE_URL="casjaysdevdocker/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # image tag - [docker pull HUB_IMAGE_URL:tag]
 HUB_IMAGE_TAG="latest"
@@ -293,7 +293,7 @@ HOST_NETWORK_ADDR="all"
 CONTAINER_PROTOCOL="http"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set containers dns [127.0.0.1,1.1.1.1,8.8.8.8]
-CONTAINER_DNS="127.0.0.1,1.1.1.1"
+CONTAINER_DNS=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup nginx proxy variables - [yes/no] [yes/no] [http] [https] [yes/no]
 HOST_NGINX_ENABLED="yes"
@@ -607,13 +607,16 @@ __test_public_reachable() {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __create_docker_script() {
   [ -n "$EXECUTE_DOCKER_CMD" ] || return
-  cat <<EOF | sed 's/ --/\n  --/g;s| -d| -d \\|g' | grep -v '^$' | sed '/  --/ s/$/ \\/' | grep '^' >"$DOCKERMGR_INSTALL_SCRIPT"
+  cat <<EOF | sed 's/ --/\n  --/g;s| -d| -d \\|g' | grep -v '^$' | sed '/  --/ s/$/ \\/' | sed "s|$HUB_IMAGE_URL:$HUB_IMAGE_TAG.*|$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS|g" | grep '^' >"$DOCKERMGR_INSTALL_SCRIPT"
 #!/usr/bin/env bash
 # Install script for $CONTAINER_NAME
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 $EXECUTE_PRE_INSTALL
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 $EXECUTE_DOCKER_CMD
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+statusCode=\$?
+[ \$statusCode -eq 0 ] || { echo "Failed to create $CONTAINER_NAME" >&2 && exit 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 docker ps -a 2>&1 | grep -q "$CONTAINER_NAME" || { echo "$CONTAINER_NAME is not running" >&2 && exit 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1702,9 +1705,9 @@ DOCKER_GET_CUSTOM="$(__trim "${DOCKER_CUSTOM_ARRAY[*]:-}")"                     
 DOCKER_GET_PUBLISH="$(__trim "${DOCKER_SET_PUBLISH[*]:-}")"                                   # --publish ports
 CONTAINER_COMMANDS="$(__trim "${CONTAINER_COMMANDS[*]:-}")"                                   # pass command to container
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# set docker commands - script creation - execute command
+# set docker commands - script creation - execute command #
 SET_EXECUTE_PRE_INSTALL="$(echo "docker stop $CONTAINER_NAME;docker rm -f $CONTAINER_NAME;docker pull $HUB_IMAGE_URL:$HUB_IMAGE_TAG || { echo \"Failed to pull $HUB_IMAGE_URL:$HUB_IMAGE_TAG\" >&2 && exit 1; }")"
-SET_EXECUTE_DOCKER_CMD="$(echo "docker run -d $DOCKER_GET_OPTIONS $DOCKER_GET_CUSTOM $DOCKER_GET_LINK $DOCKER_GET_LABELS $DOCKER_GET_CAP $DOCKER_GET_SYSCTL $DOCKER_GET_DEV $DOCKER_SET_DNS $DOCKER_GET_MNT $DOCKER_GET_ENV $DOCKER_GET_PUBLISH $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS || { echo \"Failed to create $CONTAINER_NAME\" >&2 && exit 1; }")"
+SET_EXECUTE_DOCKER_CMD="$(echo "docker run -d $DOCKER_GET_OPTIONS $DOCKER_GET_CUSTOM $DOCKER_GET_LINK $DOCKER_GET_LABELS $DOCKER_GET_CAP $DOCKER_GET_SYSCTL $DOCKER_GET_DEV $DOCKER_SET_DNS $DOCKER_GET_MNT $DOCKER_GET_ENV $DOCKER_GET_PUBLISH $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS")"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run functions
 __container_import_variables "$CONTAINER_ENV_FILE_MOUNT"
@@ -1988,31 +1991,31 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps_all -q; then
     printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
   fi
   if [ -n "$CONTAINER_USER_NAME" ]; then
-    MESSAGE="true"
+    show_user_footer="true"
     printf_cyan "Username is:                            $CONTAINER_USER_NAME"
   fi
   if [ -n "$CONTAINER_USER_PASS" ]; then
-    MESSAGE="true"
+    show_user_footer="true"
     printf_blue "Password is:                            $CONTAINER_USER_PASS"
   fi
   if [ "$CONTAINER_DATABASE_USER_ROOT" ]; then
-    MESSAGE="true"
+    show_user_footer="true"
     printf_blue "Database root user:                     $CONTAINER_DATABASE_USER_ROOT"
   fi
   if [ "$CONTAINER_DATABASE_PASS_ROOT" ]; then
-    MESSAGE="true"
+    show_user_footer="true"
     printf_blue "Database root password:                 $CONTAINER_DATABASE_PASS_ROOT"
   fi
   if [ "$CONTAINER_DATABASE_USER_NORMAL" ]; then
-    MESSAGE="true"
+    show_user_footer="true"
     printf_blue "Database user:                          $CONTAINER_DATABASE_USER_NORMAL"
   fi
   if [ "$CONTAINER_DATABASE_PASS_NORMAL" ]; then
-    MESSAGE="true"
+    show_user_footer="true"
     printf_blue "Database password:                     $CONTAINER_DATABASE_PASS_NORMAL"
   fi
+  [ "$show_user_footer" = "true" ] && printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
   if [ "$SHOW_DATABASE_INFO" = "true" ]; then
-    MESSAGE="true"
     printf_yellow "Database is running on:                 $CONTAINER_DATABASE_PROTO"
     if [ -n "$MESSAGE_CONTAINER_DATABASE" ]; then
       printf_cyan "$MESSAGE_CONTAINER_DATABASE"
