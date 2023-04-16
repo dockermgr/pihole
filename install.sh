@@ -1403,7 +1403,6 @@ if [ -n "$CONTAINER_DNS" ]; then
   CONTAINER_DNS="${CONTAINER_DNS//,/ }"
   for dns in $CONTAINER_DNS; do
     if [ "$dns" != "" ] && [ "$dns" != " " ]; then
-      echo "$dns" | grep -q ':' || dns="$dns:$dns"
       DOCKER_SET_DNS+="--dns $dns "
     fi
   done
