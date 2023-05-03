@@ -639,8 +639,7 @@ if [ \$statusCode -eq 0 ]; then
   exit 1
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-${EXECUTE_DOCKER_CMD//$HUB_IMAGE_URL:$HUB_IMAGE_TAG */ \\}
-  $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS
+${EXECUTE_DOCKER_CMD}
 statusCode=\$?
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if [ \$statusCode -ne 0 ]; then
@@ -659,6 +658,7 @@ exit 0
 EOF
   unset create_docker_script_message_pre create_docker_script_message_post
   [ -f "$DOCKERMGR_INSTALL_SCRIPT" ] || return 1
+  sed -i 's|'$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS.*'|'$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS'|g' "$DOCKERMGR_INSTALL_SCRIPT"
   chmod -Rf 755 "$DOCKERMGR_INSTALL_SCRIPT"
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
