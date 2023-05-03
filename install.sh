@@ -640,7 +640,7 @@ if [ \$statusCode -eq 0 ]; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ${EXECUTE_DOCKER_CMD//$HUB_IMAGE_URL:$HUB_IMAGE_TAG */ \\}
-$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS
+  $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS
 statusCode=\$?
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if [ \$statusCode -ne 0 ]; then
