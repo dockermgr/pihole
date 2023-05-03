@@ -813,10 +813,11 @@ DOCKER_CAP_NET_BIND_SERVICE="${ENV_DOCKER_CAP_NET_BIND_SERVICE:-$DOCKER_CAP_NET_
 DOCKERMGR_ENABLE_INSTALL_SCRIPT="${SCRIPT_ENABLED:-$DOCKERMGR_ENABLE_INSTALL_SCRIPT}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup easy port settings
-[ "$CONTAINER_SERVICE_PUBLIC" ] && CONTAINER_SERVICE_PUBLIC="0.0.0.0" || CONTAINER_SERVICE_PUBLIC="127.0.0.1"
+[ -n "$CONTAINER_SERVICE_PUBLIC" ] && CONTAINER_SERVICE_PUBLIC="0.0.0.0" || CONTAINER_SERVICE_PUBLIC="127.0.0.1"
 if [ "$CONTAINER_IS_DNS_SERVER" = "yes" ]; then
   service_port="$(__netstat "53" && __port || echo "53")"
-  CONTAINER_ADD_CUSTOM_PORT+="$CONTAINER_SERVICE_PUBLIC:$service_port:53/udp $CONTAINER_SERVICE_PUBLIC:$service_port:53/tcp "
+  CONTAINER_ADD_CUSTOM_PORT+="$CONTAINER_SERVICE_PUBLIC:$service_port:53/tcp "
+  CONTAINER_ADD_CUSTOM_PORT+="$CONTAINER_SERVICE_PUBLIC:$service_port:53/udp "
   unset service_port
 fi
 if [ "$CONTAINER_IS_DHCP_SERVER" = "yes" ]; then
@@ -851,7 +852,8 @@ if [ "$CONTAINER_IS_IMAP_SERVER" = "yes" ]; then
 fi
 if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
   service_port="$(__netstat "123" && __port || echo "123")"
-  CONTAINER_ADD_CUSTOM_PORT+="$CONTAINER_SERVICE_PUBLIC:$service_port:123/udp $CONTAINER_SERVICE_PUBLIC:$service_port:123/tcp "
+  CONTAINER_ADD_CUSTOM_PORT+="$CONTAINER_SERVICE_PUBLIC:$service_port:123/tcp "
+  CONTAINER_ADD_CUSTOM_PORT+="$CONTAINER_SERVICE_PUBLIC:$service_port:123/udp "
   unset service_port
 fi
 if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
