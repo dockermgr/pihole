@@ -660,7 +660,7 @@ exit 0
 EOF
   unset create_docker_script_message_pre create_docker_script_message_post
   [ -f "$DOCKERMGR_INSTALL_SCRIPT" ] || return 1
-  sed -i 's| '$HUB_IMAGE_URL':'$HUB_IMAGE_TAG' .*\\||g' "$DOCKERMGR_INSTALL_SCRIPT"
+  sed -i 's| '$HUB_IMAGE_URL':'$HUB_IMAGE_TAG' .*\\|\\|g' "$DOCKERMGR_INSTALL_SCRIPT"
   chmod -Rf 755 "$DOCKERMGR_INSTALL_SCRIPT"
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
