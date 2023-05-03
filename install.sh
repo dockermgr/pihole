@@ -1007,17 +1007,6 @@ if [ -e "$CGROUPS_MOUNTS" ] || [ -e "/sys/fs/cgroup" ]; then
   fi
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Mount hosts resolv.conf in the container
-if [ -e "$HOST_RESOLVE_FILE" ] || [ -f "/etc/resolv.conf" ]; then
-  if [ "$HOST_RESOLVE_ENABLED" = "yes" ]; then
-    if [ -z "$HOST_RESOLVE_FILE" ]; then
-      DOCKER_SET_OPTIONS+=("--volume /etc/resolv.conf:/etc/resolv.conf:ro")
-    else
-      DOCKER_SET_OPTIONS+=("--volume $HOST_RESOLVE_FILE:/etc/resolv.conf:ro")
-    fi
-  fi
-fi
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount the docker socket
 if [ -f "$DOCKER_SOCKET_MOUNT" ] || [ -f "/var/run/docker.sock" ]; then
   if [ "$DOCKER_SOCKET_ENABLED" = "yes" ]; then
@@ -1074,14 +1063,6 @@ if [ "$CONTAINER_X11_ENABLED" = "yes" ]; then
     DOCKER_SET_OPTIONS+=("--volume $HOST_X11_SOCKET:${CONTAINER_X11_SOCKET:-/tmp/.X11-unix}")
     DOCKER_SET_OPTIONS+=("--volume $HOST_X11_XAUTH:${CONTAINER_X11_XAUTH:-/home/x11user/.Xauthority}")
   fi
-fi
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#
-if [ "$HOST_ETC_HOSTS_ENABLED" = "yes" ]; then
-  if [ -z "$HOST_ETC_HOSTS_MOUNT" ]; then
-    HOST_ETC_HOSTS_MOUNT="/usr/local/etc/host"
-  fi
-  DOCKER_SET_OPTIONS+=("--volume /etc/hosts:$HOST_ETC_HOSTS_MOUNT:ro")
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup containers hostname
@@ -1231,56 +1212,56 @@ else
   CONTAINER_SERVICE_PUBLIC="127.0.0.1"
 fi
 if [ "$CONTAINER_IS_DNS_SERVER" = "yes" ]; then
-  service_port="$(__netstat "53" && __port || echo "53")"
+  service_port="$(__netstat "53" | grep -v 'docker' && __port || echo "53")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:53/udp")
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:53/tcp")
   unset service_port
 fi
 if [ "$CONTAINER_IS_DHCP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "67" && __port || echo "67")"
+  service_port="$(__netstat "67" | grep -v 'docker' && __port || echo "67")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:67/udp")
-  service_port="$(__netstat "68" && __port || echo "68")"
+  service_port="$(__netstat "68" | grep -v 'docker' && __port || echo "68")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:68/udp")
   unset service_port
 fi
 if [ "$CONTAINER_IS_TFTP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "69" && __port || echo "69")"
+  service_port="$(__netstat "69" | grep -v 'docker' && __port || echo "69")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:69/udp")
   unset service_port
 fi
 if [ "$CONTAINER_IS_SMTP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "25" && __port || echo "25")"
+  service_port="$(__netstat "25" | grep -v 'docker' && __port || echo "25")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:25/tcp")
-  service_port="$(__netstat "465" && __port || echo "465")"
+  service_port="$(__netstat "465" | grep -v 'docker' && __port || echo "465")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:465/tcp")
-  service_port="$(__netstat "587" && __port || echo "587")"
+  service_port="$(__netstat "587" | grep -v 'docker' && __port || echo "587")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:587/tcp")
   unset service_port
 fi
 if [ "$CONTAINER_IS_POP3_SERVER" = "yes" ]; then
-  service_port="$(__netstat "110" && __port || echo "110")"
+  service_port="$(__netstat "110" | grep -v 'docker' && __port || echo "110")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:110/tcp")
-  service_port="$(__netstat "995" && __port || echo "995")"
+  service_port="$(__netstat "995" | grep -v 'docker' && __port || echo "995")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:995/tcp")
   unset service_port
 fi
 if [ "$CONTAINER_IS_IMAP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "143" && __port || echo "143")"
+  service_port="$(__netstat "143" | grep -v 'docker' && __port || echo "143")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:143/tcp")
-  service_port="$(__netstat "993" && __port || echo "993")"
+  service_port="$(__netstat "993" | grep -v 'docker' && __port || echo "993")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:993/tcp")
   unset service_port
 fi
 if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
-  service_port="$(__netstat "123" && __port || echo "123")"
+  service_port="$(__netstat "123" | grep -v 'docker' && __port || echo "123")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:123/udp")
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:123/tcp")
   unset service_port
 fi
 if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
-  service_port="$(__netstat "119" && __port || echo "119")"
+  service_port="$(__netstat "119" | grep -v 'docker' && __port || echo "119")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:119/tcp")
-  service_port="$(__netstat "433" && __port || echo "433")"
+  service_port="$(__netstat "433" | grep -v 'docker' && __port || echo "433")"
   DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:433/tcp")
   unset service_port
 fi
@@ -1883,6 +1864,28 @@ else
   __sudo_exec chown -f "$USER":"$USER" "$DATADIR" "$INSTDIR" "$INSTDIR" &>/dev/null
   __sudo_exec date +'installed on %Y-%m-%d at %H:%M' | tee "$DATADIR/.installed" &>/dev/null
 fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Mount resolv.conf file in the container
+if [ "$HOST_RESOLVE_ENABLED" = "yes" ]; then
+  [ -n "$HOST_RESOLVE_FILE" ] || HOST_RESOLVE_FILE="/etc/resolv.conf"
+  mkdir -p "$INSTDIR/rootfs/etc"
+  if [ ! -f "$INSTDIR/rootfs/etc/resolv.conf" ]; then
+    cp -Rf "/etc/resolv.conf" "$INSTDIR/rootfs/etc/resolv.conf"
+  fi
+  touch "$INSTDIR/rootfs/etc/resolv.conf"
+  DOCKER_SET_OPTIONS+=("--volume $INSTDIR/rootfs/etc/resolv.conf:/etc/resolv.conf")
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Mount hosts file in the container
+if [ "$HOST_ETC_HOSTS_ENABLED" = "yes" ]; then
+  mkdir -p "$INSTDIR/rootfs/etc"
+  if [ ! -f "$INSTDIR/rootfs/etc/hosts" ]; then
+    cp -Rf "$INSTDIR/rootfs/etc/hosts" "$INSTDIR/rootfs/etc/hosts"
+  fi
+  touch "$INSTDIR/rootfs/etc/hosts"
+  DOCKER_SET_OPTIONS+=("--volume $INSTDIR/rootfs/etc/hosts:/etc/hosts")
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 DOCKERMGR_INSTALL_SCRIPT="$DOCKERMGR_CONFIG_DIR/scripts/$CONTAINER_NAME.sh"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # setup the container
