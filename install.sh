@@ -316,7 +316,7 @@ CONTAINER_WEB_SERVER_VHOSTS=""
 CONTAINER_ADD_WEB_PORTS=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add custom port - random portmapping -  [exter:inter] or [listen:exter:inter/[tcp,udp]] random:[inter]
-CONTAINER_ADD_CUSTOM_PORT="::53:53/tcp,::53:53/udp"
+CONTAINER_ADD_CUSTOM_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # mail settings - [yes/no] [user] [domainname] [server]
 CONTAINER_EMAIL_ENABLED=""
