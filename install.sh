@@ -639,7 +639,7 @@ if [ \$statusCode -eq 0 ]; then
   exit 1
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-${EXECUTE_DOCKER_CMD//$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS*/ \\}
+${EXECUTE_DOCKER_CMD//$HUB_IMAGE_URL:$HUB_IMAGE_TAG */ \\}
 $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS
 statusCode=\$?
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
