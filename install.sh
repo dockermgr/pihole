@@ -627,21 +627,30 @@ __create_docker_script() {
   [ -n "$EXECUTE_DOCKER_CMD" ] || return
   create_docker_script_message_pre="${create_docker_script_message_pre:-Failed to execute $EXECUTE_PRE_INSTALL}"
   create_docker_script_message_post="${create_docker_script_message_post:-Failed to create $CONTAINER_NAME}"
-  cat <<EOF | sed 's/ --/\n  --/g;s| -d| -d \\|g' | grep -v '^$' | sed '/  --/ s/$/ \\/' | sed "s|$HUB_IMAGE_URL:$HUB_IMAGE_TAG.* |$HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS|g" | grep '^' >"$DOCKERMGR_INSTALL_SCRIPT"
+  cat <<EOF | sed 's/ --/\n  --/g;s| -d| -d \\|g' | grep -v '^$' | sed '/  --/ s/$/ \\/' | grep '^' >"$DOCKERMGR_INSTALL_SCRIPT"
 #!/usr/bin/env bash
 # Install script for $CONTAINER_NAME
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 $EXECUTE_PRE_INSTALL
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 statusCode=\$?
-[ \$statusCode -eq 0 ] || { echo "$create_docker_script_message_pre" >&2 && exit 1; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ \$statusCode -eq 0 ]; then
+  echo "$create_docker_script_message_pre" >&2
+  exit 1
+fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 $EXECUTE_DOCKER_CMD
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 statusCode=\$?
-[ \$statusCode -eq 0 ] || { echo "$create_docker_script_message_post" >&2 && exit 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-docker ps -a 2>&1 | grep -q "$CONTAINER_NAME" || { echo "$CONTAINER_NAME is not running" >&2 && exit 1; }
+if [ \$statusCode -ne 0 ]; then
+  echo "$create_docker_script_message_post" >&2
+  exit 1
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if ! docker ps -a 2>&1 | grep -q "$CONTAINER_NAME"; then
+echo "$CONTAINER_NAME is not running" >&2
+  exit 1
+fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 exit 0
 # end script
@@ -649,6 +658,7 @@ exit 0
 EOF
   unset create_docker_script_message_pre create_docker_script_message_post
   [ -f "$DOCKERMGR_INSTALL_SCRIPT" ] || return 1
+  sed -i "s| $HUB_IMAGE_URL:$HUB_IMAGE_TAG.* \\| $HUB_IMAGE_URL:$HUB_IMAGE_TAG $CONTAINER_COMMANDS|g" "$DOCKERMGR_INSTALL_SCRIPT"
   chmod -Rf 755 "$DOCKERMGR_INSTALL_SCRIPT"
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1771,12 +1781,12 @@ NGINX_PROXY_URL="${NGINX_PROXY_URL// /}"
 # Set temp env for PORTS ENV variable
 CONTAINER_ENV_PORTS=("${DOCKER_SET_TMP_PUBLISH[@]//--publish/}")
 SET_PORTS_ENV_TMP="$(__trim "${CONTAINER_ENV_PORTS[*]}")"
-DOCKER_SET_PORTS_ENV_TMP="$(echo "${SET_PORTS_ENV_TMP//,/ }" | tr ' ' '\n' | grep ':' | awk -F ':' '{print $NF}' | sort -uV | grep '^')"
-DOCKER_SET_PORTS_ENV_TMP="$(echo "$DOCKER_SET_PORTS_ENV_TMP" | grep '[0-9]' | sed 's|/.*||g' | grep -v '^$' | tr '\n' ' ' | grep '^' || echo '')"
+DOCKER_SET_PORTS_ENV_TMP="$(echo "${SET_PORTS_ENV_TMP//,/ }" | tr ' ' '\n' | grep ':' | awk -F ':' '{print $NF}' | grep '^')"
+DOCKER_SET_PORTS_ENV_TMP="$(echo "$DOCKER_SET_PORTS_ENV_TMP" | grep '[0-9]' | sed 's|/.*||g' | sort -uV | grep -v '^$' | tr '\n' ' ' | grep '^' || echo '')"
 ENV_PORTS="${DOCKER_SET_PORTS_ENV_TMP[*]}"
 ENV_PORTS="$(__trim "${ENV_PORTS[*]}")"
 if [ -n "$ENV_PORTS" ]; then
-  DOCKER_SET_OPTIONS+=("--env ENV_PORTS=\"$ENV_PORTS\"")
+  DOCKER_SET_OPTIONS+=("--env ENV_PORTS=\"${ENV_PORTS[*]}\"")
 fi
 unset DOCKER_SET_PORTS_ENV_TMP ENV_PORTS SET_PORTS_ENV_TMP
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
