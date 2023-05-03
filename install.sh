@@ -820,63 +820,6 @@ DOCKER_CAP_NET_ADMIN="${ENV_DOCKER_CAP_NET_ADMIN:-$DOCKER_CAP_NET_ADMIN}"
 DOCKER_CAP_NET_BIND_SERVICE="${ENV_DOCKER_CAP_NET_BIND_SERVICE:-$DOCKER_CAP_NET_BIND_SERVICE}"
 DOCKERMGR_ENABLE_INSTALL_SCRIPT="${SCRIPT_ENABLED:-$DOCKERMGR_ENABLE_INSTALL_SCRIPT}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Setup easy port settings
-[ "$CONTAINER_SERVICE_PUBLIC" ] && CONTAINER_SERVICE_PUBLIC="0.0.0.0" || CONTAINER_SERVICE_PUBLIC="127.0.0.1"
-if [ "$CONTAINER_IS_DNS_SERVER" = "yes" ]; then
-  service_port="$(__netstat "53" && __port || echo "53")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:53/udp")
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:53/tcp")
-  unset service_port
-fi
-if [ "$CONTAINER_IS_DHCP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "67" && __port || echo "67")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:67/udp")
-  service_port="$(__netstat "68" && __port || echo "68")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:68/udp")
-  unset service_port
-fi
-if [ "$CONTAINER_IS_TFTP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "69" && __port || echo "69")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:69/udp")
-  unset service_port
-fi
-if [ "$CONTAINER_IS_SMTP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "25" && __port || echo "25")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:25/tcp")
-  service_port="$(__netstat "465" && __port || echo "465")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:465/tcp")
-  service_port="$(__netstat "587" && __port || echo "587")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:587/tcp")
-  unset service_port
-fi
-if [ "$CONTAINER_IS_POP3_SERVER" = "yes" ]; then
-  service_port="$(__netstat "110" && __port || echo "110")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:110/tcp")
-  service_port="$(__netstat "995" && __port || echo "995")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:995/tcp")
-  unset service_port
-fi
-if [ "$CONTAINER_IS_IMAP_SERVER" = "yes" ]; then
-  service_port="$(__netstat "143" && __port || echo "143")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:143/tcp")
-  service_port="$(__netstat "993" && __port || echo "993")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:993/tcp")
-  unset service_port
-fi
-if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
-  service_port="$(__netstat "123" && __port || echo "123")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:123/udp")
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:123/tcp")
-  unset service_port
-fi
-if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
-  service_port="$(__netstat "119" && __port || echo "119")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:119/tcp")
-  service_port="$(__netstat "433" && __port || echo "433")"
-  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:433/tcp")
-  unset service_port
-fi
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # SSL Setup container mounts
 CONTAINER_SSL_DIR="${CONTAINER_SSL_DIR:-/config/ssl}"
 CONTAINER_SSL_CA="${CONTAINER_SSL_CA:-$CONTAINER_SSL_DIR/ca.crt}"
@@ -1267,6 +1210,69 @@ if [ "$CONTAINER_HTTPS_PORT" != "" ]; then
   CONTAINER_PROTOCOL="https"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Setup easy port settings
+if [ "$CONTAINER_SERVICE_PUBLIC" = "yes" ] || [ "$CONTAINER_SERVICE_PUBLIC" = "0.0.0.0" ]; then
+  CONTAINER_SERVICE_PUBLIC="0.0.0.0"
+elif echo "$CONTAINER_SERVICE_PUBLIC" | grep -q '[0-9].*\.[0-9].*\.[0-9].*\.[0-9]'; then
+  true
+else
+  CONTAINER_SERVICE_PUBLIC="127.0.0.1"
+fi
+if [ "$CONTAINER_IS_DNS_SERVER" = "yes" ]; then
+  service_port="$(__netstat "53" && __port || echo "53")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:53/udp")
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:53/tcp")
+  unset service_port
+fi
+if [ "$CONTAINER_IS_DHCP_SERVER" = "yes" ]; then
+  service_port="$(__netstat "67" && __port || echo "67")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:67/udp")
+  service_port="$(__netstat "68" && __port || echo "68")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:68/udp")
+  unset service_port
+fi
+if [ "$CONTAINER_IS_TFTP_SERVER" = "yes" ]; then
+  service_port="$(__netstat "69" && __port || echo "69")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:69/udp")
+  unset service_port
+fi
+if [ "$CONTAINER_IS_SMTP_SERVER" = "yes" ]; then
+  service_port="$(__netstat "25" && __port || echo "25")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:25/tcp")
+  service_port="$(__netstat "465" && __port || echo "465")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:465/tcp")
+  service_port="$(__netstat "587" && __port || echo "587")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:587/tcp")
+  unset service_port
+fi
+if [ "$CONTAINER_IS_POP3_SERVER" = "yes" ]; then
+  service_port="$(__netstat "110" && __port || echo "110")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:110/tcp")
+  service_port="$(__netstat "995" && __port || echo "995")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:995/tcp")
+  unset service_port
+fi
+if [ "$CONTAINER_IS_IMAP_SERVER" = "yes" ]; then
+  service_port="$(__netstat "143" && __port || echo "143")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:143/tcp")
+  service_port="$(__netstat "993" && __port || echo "993")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:993/tcp")
+  unset service_port
+fi
+if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
+  service_port="$(__netstat "123" && __port || echo "123")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:123/udp")
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:123/tcp")
+  unset service_port
+fi
+if [ "$CONTAINER_IS_TIME_SERVER" = "yes" ]; then
+  service_port="$(__netstat "119" && __port || echo "119")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:119/tcp")
+  service_port="$(__netstat "433" && __port || echo "433")"
+  DOCKER_SET_TMP_PUBLISH+=("--publish $CONTAINER_SERVICE_PUBLIC:$service_port:433/tcp")
+  unset service_port
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Database setup
 if [ -z "$CONTAINER_DATABASE_LISTEN" ]; then
   CONTAINER_DATABASE_LISTEN="0.0.0.0"
@@ -1384,25 +1390,25 @@ if [ "$CONTAINER_DATABASE_ENABLED" = "yes" ]; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # containers username and password configuration
-if [ -n "$PIHOLE_USERNAME" ]; then
-  CONTAINER_USER_NAME="$PIHOLE_USERNAME"
+if [ -n "$GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME" ]; then
+  CONTAINER_USER_NAME="$GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME"
 fi
 if [ -n "$CONTAINER_USER_NAME" ]; then
-  CONTAINER_USER_NAME="${PIHOLE_USERNAME:-${CONTAINER_USER_NAME:-$DEFAULT_USERNAME}}"
+  CONTAINER_USER_NAME="${GEN_SCRIPT_REPLACE_APPENV_NAME_USERNAME:-${CONTAINER_USER_NAME:-$DEFAULT_USERNAME}}"
 fi
 if [ -n "$CONTAINER_USER_NAME" ]; then
   if [ -n "$CONTAINER_ENV_USER_NAME" ]; then
     DOCKER_SET_OPTIONS+=("--env ${CONTAINER_ENV_USER_NAME:-username}=\"$CONTAINER_USER_NAME\"")
   fi
 fi
-if [ -n "$PIHOLE_PASSWORD" ]; then
-  CONTAINER_USER_PASS="$PIHOLE_PASSWORD"
+if [ -n "$GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD" ]; then
+  CONTAINER_USER_PASS="$GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD"
 fi
 if [ -n "$CONTAINER_USER_PASS" ]; then
   if [ "$CONTAINER_USER_PASS" = "random" ]; then
     CONTAINER_USER_PASS="$(__password "${CONTAINER_PASS_LENGTH:-16}")"
   fi
-  CONTAINER_USER_PASS="${PIHOLE_PASSWORD:-${CONTAINER_USER_PASS:-$DEFAULT_PASSWORD}}"
+  CONTAINER_USER_PASS="${GEN_SCRIPT_REPLACE_APPENV_NAME_PASSWORD:-${CONTAINER_USER_PASS:-$DEFAULT_PASSWORD}}"
 fi
 if [ -n "$CONTAINER_USER_PASS" ]; then
   if [ -n "$CONTAINER_ENV_PASS_NAME" ]; then
