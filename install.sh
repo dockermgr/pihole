@@ -247,7 +247,7 @@ CGROUPS_ENABLED="no"
 CGROUPS_MOUNTS=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set location to resolv.conf - [yes/no] [/etc/resolv.conf]
-HOST_RESOLVE_ENABLED="no"
+HOST_RESOLVE_ENABLED="yes"
 HOST_RESOLVE_FILE=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Enable hosts /etc/hosts file - [yes/no] [/usr/local/etc/hosts]
@@ -316,7 +316,7 @@ CONTAINER_WEB_SERVER_VHOSTS=""
 CONTAINER_ADD_WEB_PORTS=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add custom port - random portmapping -  [exter:inter] or [listen:exter:inter/[tcp,udp]] random:[inter]
-CONTAINER_ADD_CUSTOM_PORT=""
+CONTAINER_ADD_CUSTOM_PORT="::53:53/tcp,::53:53/udp"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # mail settings - [yes/no] [user] [domainname] [server]
 CONTAINER_EMAIL_ENABLED=""
