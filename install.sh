@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202305031449-git
+##@Version           :  202305031641-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
-# @@License          :  LICENSE.md
+# @@License          :  WTFPL
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Wednesday, May 03, 2023 14:49 EDT
+# @@Created          :  Wednesday, May 03, 2023 16:41 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
 # @@TODO             :  Completely rewrite/refactor/variable cleanup
-# @@Other            :
-# @@Resource         :
+# @@Other            :  
+# @@Resource         :  
 # @@Terminal App     :  no
 # @@sudo/root        :  no
 # @@Template         :  installers/dockermgr
@@ -25,7 +25,7 @@
 # shellcheck disable=SC2199
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202305031449-git"
+VERSION="202305031641-git"
 REPO_BRANCH="${GIT_REPO_BRANCH:-main}"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
@@ -191,7 +191,7 @@ CONTAINER_SSL_CRT=""
 CONTAINER_SSL_KEY=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # URL to container image - docker pull - [URL]
-HUB_IMAGE_URL="pihole/pihole"
+HUB_IMAGE_URL="casjaysdevdocker/pihole"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # image tag - [docker pull HUB_IMAGE_URL:tag]
 HUB_IMAGE_TAG="latest"
@@ -310,7 +310,7 @@ HOST_NGINX_HTTPS_PORT="443"
 HOST_NGINX_UPDATE_CONF="yes"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Enable this if container is running a webserver - [yes/no] [internalPort] [yes/no] [yes/no] [listen]
-CONTAINER_WEB_SERVER_ENABLED="yes"
+CONTAINER_WEB_SERVER_ENABLED="no"
 CONTAINER_WEB_SERVER_INT_PORT="80"
 CONTAINER_WEB_SERVER_SSL_ENABLED="no"
 CONTAINER_WEB_SERVER_AUTH_ENABLED="no"
@@ -333,7 +333,7 @@ CONTAINER_EMAIL_RELAY=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Easy setup for services - [no/yes]
 CONTAINER_SERVICE_PUBLIC="yes"
-CONTAINER_IS_DNS_SERVER="yes"
+CONTAINER_IS_DNS_SERVER="no"
 CONTAINER_IS_DHCP_SERVER="no"
 CONTAINER_IS_TFTP_SERVER="no"
 CONTAINER_IS_SMTP_SERVER="no"
@@ -371,12 +371,12 @@ CONTAINER_DATABASE_LENGTH_NORMAL="20"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set a username and password - [user] [pass/random]
 CONTAINER_USER_NAME=""
-CONTAINER_USER_PASS="random"
-CONTAINER_PASS_LENGTH="32"
+CONTAINER_USER_PASS=""
+CONTAINER_PASS_LENGTH="24"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container username and password env name - [CONTAINER_ENV_USER_NAME=$CONTAINER_USER_NAME]
 CONTAINER_ENV_USER_NAME=""
-CONTAINER_ENV_PASS_NAME="WEBPASSWORD"
+CONTAINER_ENV_PASS_NAME=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add the names of processes - [apache,mysql]
 CONTAINER_SERVICES_LIST=""
@@ -390,7 +390,7 @@ CONTAINER_MOUNT_CONFIG_ENABLED="yes"
 CONTAINER_MOUNT_CONFIG_MOUNT_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts - [/dir:/dir,/otherdir:/otherdir]
-CONTAINER_MOUNTS="$LOCAL_CONFIG_DIR/pihole:/etc/pihole,$LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d"
+CONTAINER_MOUNTS=""
 CONTAINER_MOUNTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional devices - [/dev:/dev,/otherdev:/otherdev]
@@ -408,11 +408,11 @@ CONTAINER_SYSCTL+=""
 # Set capabilites - [yes/no]
 DOCKER_SYS_TIME="yes"
 DOCKER_SYS_ADMIN="yes"
-DOCKER_CAP_CHOWN="yes"
-DOCKER_CAP_NET_RAW="yes"
-DOCKER_CAP_SYS_NICE="yes"
-DOCKER_CAP_NET_ADMIN="yes"
-DOCKER_CAP_NET_BIND_SERVICE="yes"
+DOCKER_CAP_CHOWN="no"
+DOCKER_CAP_NET_RAW="no"
+DOCKER_CAP_SYS_NICE="no"
+DOCKER_CAP_NET_ADMIN="no"
+DOCKER_CAP_NET_BIND_SERVICE="no"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define labels - [traefik.enable=true,label=label,otherlabel=label2]
 CONTAINER_LABELS=""
@@ -443,15 +443,6 @@ DOCKERMGR_ENABLE_INSTALL_SCRIPT="yes"
 # Set custom container enviroment variables - [--env MYVAR="VAR"]
 __custom_docker_env() {
   cat <<EOF | tee | sed 's|,| --env |g' | tr '\n' ' ' | __remove_extra_spaces
---env IPv6=true
---env DHCP_IPv6=true
---env TEMPERATUREUNIT=f
---env SOCKET_LISTENING=all
---env DNSMASQ_LISTENING=all
---env WEBTHEME=default-dark
---env VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME}
---env PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME}
---env PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME}
 
 EOF
 }
@@ -2046,16 +2037,16 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps_all -q; then
   if [ "$HOSTS_WRITABLE" = "true" ]; then
     if [ "$HOST_LISTEN_ADDR" = 'home' ]; then
       __printf_color "44" "Adding to /etc/hosts:                   $APPNAME.home $HOST_LISTEN_ADDR"
-      if ! grep -sq "$HOST_LISTEN_ADDR.* $APPNAME.home" "/etc/hosts"; then
+      if ! grep -sq " $APPNAME.home" "/etc/hosts"; then
         echo "$HOST_LISTEN_ADDR        $APPNAME.home" | sudo tee -a "/etc/hosts" &>/dev/null
       fi
     else
       __printf_color "44" "Adding to /etc/hosts:                   $APPNAME.home $HOST_LISTEN_ADDR"
-      if ! grep -sq "$HOST_LISTEN_ADDR.* $APPNAME.home" "/etc/hosts"; then
+      if ! grep -sq " $APPNAME.home" "/etc/hosts"; then
         echo "$HOST_LISTEN_ADDR        $APPNAME.home" | sudo tee -a "/etc/hosts" &>/dev/null
       fi
       __printf_color "44" "Adding to /etc/hosts:                   $CONTAINER_HOSTNAME $HOST_LISTEN_ADDR"
-      if ! grep -sq "$HOST_LISTEN_ADDR.* $CONTAINER_HOSTNAME" "/etc/hosts"; then
+      if ! grep -sq " $CONTAINER_HOSTNAME" "/etc/hosts"; then
         echo "$HOST_LISTEN_ADDR        $CONTAINER_HOSTNAME" | sudo tee -a "/etc/hosts" &>/dev/null
       fi
       show_hosts_messge_banner="true"
@@ -2063,7 +2054,7 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps_all -q; then
     if [ -n "$NGINX_VHOST_NAMES" ]; then
       NGINX_VHOST_NAMES="${NGINX_VHOST_NAMES//,/ }"
       for vhost in $NGINX_VHOST_NAMES; do
-        if ! grep -sq "$CONTAINER_WEB_SERVER_LISTEN_ON.* $vhost" "/etc/hosts"; then
+        if ! grep -sq " $vhost" "/etc/hosts"; then
           if echo "$vhost" | grep -qFv '*'; then
             __printf_color "44" "Adding to /etc/hosts:                  $vhost $CONTAINER_WEB_SERVER_LISTEN_ON"
             echo "$CONTAINER_WEB_SERVER_LISTEN_ON        $vhost" | sudo tee -a "/etc/hosts" &>/dev/null
