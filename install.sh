@@ -12,8 +12,8 @@
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
 # @@TODO             :  Completely rewrite/refactor/variable cleanup
-# @@Other            :  
-# @@Resource         :  
+# @@Other            :
+# @@Resource         :
 # @@Terminal App     :  no
 # @@sudo/root        :  no
 # @@Template         :  installers/dockermgr
@@ -258,7 +258,7 @@ HOST_RESOLVE_ENABLED="no"
 HOST_ETC_RESOLVE_INIT_FILE=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Enable hosts /etc/hosts file - [yes/no] [/etc/hosts]
-HOST_ETC_HOSTS_ENABLED="yes"
+HOST_ETC_HOSTS_ENABLED="no"
 HOST_ETC_HOSTS_INIT_FILE=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount docker socket - [yes/no] [/var/run/docker.sock]
@@ -310,7 +310,7 @@ HOST_NGINX_HTTPS_PORT="443"
 HOST_NGINX_UPDATE_CONF="yes"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Enable this if container is running a webserver - [yes/no] [internalPort] [yes/no] [yes/no] [listen]
-CONTAINER_WEB_SERVER_ENABLED="no"
+CONTAINER_WEB_SERVER_ENABLED="yes"
 CONTAINER_WEB_SERVER_INT_PORT="80"
 CONTAINER_WEB_SERVER_SSL_ENABLED="no"
 CONTAINER_WEB_SERVER_AUTH_ENABLED="no"
@@ -333,8 +333,8 @@ CONTAINER_EMAIL_RELAY=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Easy setup for services - [no/yes]
 CONTAINER_SERVICE_PUBLIC="yes"
-CONTAINER_IS_DNS_SERVER="no"
-CONTAINER_IS_DHCP_SERVER="no"
+CONTAINER_IS_DNS_SERVER="yes"
+CONTAINER_IS_DHCP_SERVER="yes"
 CONTAINER_IS_TFTP_SERVER="no"
 CONTAINER_IS_SMTP_SERVER="no"
 CONTAINER_IS_POP3_SERVER="no"
@@ -371,26 +371,26 @@ CONTAINER_DATABASE_LENGTH_NORMAL="20"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set a username and password - [user] [pass/random]
 CONTAINER_USER_NAME=""
-CONTAINER_USER_PASS=""
-CONTAINER_PASS_LENGTH="24"
+CONTAINER_USER_PASS="random"
+CONTAINER_PASS_LENGTH="32"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container username and password env name - [CONTAINER_ENV_USER_NAME=$CONTAINER_USER_NAME]
 CONTAINER_ENV_USER_NAME=""
-CONTAINER_ENV_PASS_NAME=""
+CONTAINER_ENV_PASS_NAME="WEBPASSWORD"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add the names of processes - [apache,mysql]
 CONTAINER_SERVICES_LIST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container data dir - [yes/no] [/data]
-CONTAINER_MOUNT_DATA_ENABLED="yes"
+CONTAINER_MOUNT_DATA_ENABLED="no"
 CONTAINER_MOUNT_DATA_MOUNT_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Mount container config dir - [yes/no] [/config]
-CONTAINER_MOUNT_CONFIG_ENABLED="yes"
+CONTAINER_MOUNT_CONFIG_ENABLED="no"
 CONTAINER_MOUNT_CONFIG_MOUNT_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional mounts - [/dir:/dir,/otherdir:/otherdir]
-CONTAINER_MOUNTS=""
+CONTAINER_MOUNTS="$LOCAL_CONFIG_DIR/pihole:/etc/pihole,$LOCAL_CONFIG_DIR/dnsmasq.d:/etc/dnsmasq.d"
 CONTAINER_MOUNTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define additional devices - [/dev:/dev,/otherdev:/otherdev]
@@ -408,11 +408,11 @@ CONTAINER_SYSCTL+=""
 # Set capabilites - [yes/no]
 DOCKER_SYS_TIME="yes"
 DOCKER_SYS_ADMIN="yes"
-DOCKER_CAP_CHOWN="no"
-DOCKER_CAP_NET_RAW="no"
-DOCKER_CAP_SYS_NICE="no"
-DOCKER_CAP_NET_ADMIN="no"
-DOCKER_CAP_NET_BIND_SERVICE="no"
+DOCKER_CAP_CHOWN="yes"
+DOCKER_CAP_NET_RAW="yes"
+DOCKER_CAP_SYS_NICE="yes"
+DOCKER_CAP_NET_ADMIN="yes"
+DOCKER_CAP_NET_BIND_SERVICE="yes"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define labels - [traefik.enable=true,label=label,otherlabel=label2]
 CONTAINER_LABELS=""
@@ -443,6 +443,15 @@ DOCKERMGR_ENABLE_INSTALL_SCRIPT="yes"
 # Set custom container enviroment variables - [--env MYVAR="VAR"]
 __custom_docker_env() {
   cat <<EOF | tee | sed 's|,| --env |g' | tr '\n' ' ' | __remove_extra_spaces
+--env IPv6=true
+--env DHCP_IPv6=true
+--env TEMPERATUREUNIT=f
+--env SOCKET_LISTENING=all
+--env DNSMASQ_LISTENING=all
+--env WEBTHEME=default-dark
+--env VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME}
+--env PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME}
+--env PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME}
 
 EOF
 }
@@ -563,7 +572,6 @@ CONTAINER_USER_NAME="${CONTAINER_USER_NAME:-}"
 CONTAINER_USER_PASS="${CONTAINER_USER_PASS:-}"
 CONTAINER_PASS_LENGTH="${CONTAINER_PASS_LENGTH:-}"
 CONTAINER_ENV_USER_NAME="${CONTAINER_ENV_USER_NAME:-}"
-CONTAINER_ENV_PASS_NAME="${CONTAINER_ENV_PASS_NAME:-}"
 CONTAINER_SERVICES_LIST="${CONTAINER_SERVICES_LIST:-}"
 CONTAINER_MOUNT_DATA_ENABLED="${CONTAINER_MOUNT_DATA_ENABLED:-}"
 CONTAINER_MOUNT_DATA_MOUNT_DIR="${CONTAINER_MOUNT_DATA_MOUNT_DIR:-}"
