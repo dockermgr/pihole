@@ -1135,7 +1135,7 @@ HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR:-$SET_LAN_IP}"
 if [ "$HOST_NETWORK_ADDR" = "yes" ] || [ "$HOST_NETWORK_ADDR" = "lan" ]; then
   HOST_DEFINE_LISTEN="$SET_LAN_IP"
   HOST_LISTEN_ADDR="$SET_LAN_IP"
-elif [ "$HOST_NETWORK_ADDR" = "public" ]; then
+elif [ "$HOST_NETWORK_ADDR" = "public" ] || [ "$HOST_NETWORK_ADDR" = "all" ]; then
   if connect_test && __test_public_reachable; then
     HOST_DEFINE_LISTEN="0.0.0.0"
     HOST_LISTEN_ADDR=$(__public_ip)
