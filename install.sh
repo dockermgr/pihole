@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202305111545-git
+##@Version           :  202305111604-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Thursday, May 11, 2023 15:45 EDT
+# @@Created          :  Thursday, May 11, 2023 16:04 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -27,7 +27,7 @@
 # shellcheck disable=SC2317
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202305111545-git"
+VERSION="202305111604-git"
 REPO_BRANCH="${GIT_REPO_BRANCH:-main}"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
@@ -452,19 +452,18 @@ DOCKERMGR_ENABLE_INSTALL_SCRIPT="yes"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set custom container enviroment variables - [MYVAR="VAR"]
 __custom_docker_env() {
-  cat <<EOF | tee
---env IPv6=true
---env DHCP_IPv6=true
---env TEMPERATUREUNIT=f
---env SOCKET_LISTENING=all
---env DNSMASQ_LISTENING=all
---env WEBTHEME=default-dark
---env VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME}
---env PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME}
---env PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME}
+  cat <<EOF | tee | grep -v '^$'
+IPv6=true
+DHCP_IPv6=true
+TEMPERATUREUNIT=f
+SOCKET_LISTENING=all
+DNSMASQ_LISTENING=all
+WEBTHEME=default-dark
+VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME}
+PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME}
+PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME}
 
 EOF
-  echo ''
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this function will create an env file in the containers filesystem - see CONTAINER_ENV_FILE_ENABLED
@@ -620,6 +619,8 @@ EOF
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define extra functions
+__custom_docker_clean_env() { grep -Ev '^$|^#' | sed 's|^|--env |g' | grep '\--' | grep -v '\--env \\' | tr '\n' ' ' | __remove_extra_spaces; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __rport() {
   local port=""
   port="$(__port)"
@@ -1802,7 +1803,7 @@ if [ -n "$ENV_PORTS" ]; then
 fi
 unset DOCKER_SET_PORTS_ENV_TMP ENV_PORTS SET_PORTS_ENV_TMP
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-DOCKER_CUSTOM_ARRAY="$(__custom_docker_env | grep -Ev '^$|^#' | sed 's|^|--env |g' | grep '\--' | tr '\n' ' ' | __remove_extra_spaces)"
+DOCKER_CUSTOM_ARRAY="$(__custom_docker_env | __custom_docker_clean_env)"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Clean up variables
 DOCKER_SET_PUBLISH="$(printf '%s\n' "${DOCKER_SET_TMP_PUBLISH[@]}" | sort -Vu | tr '\n' ' ')" # ensure only one
@@ -1833,7 +1834,8 @@ __dockermgr_password_variables >"$DOCKERMGR_CONFIG_DIR/secure/$APPNAME"
 chmod -f 600 "$DOCKERMGR_CONFIG_DIR/secure/$APPNAME"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if [ ! -f "$DOCKERMGR_CONFIG_DIR/env/$APPNAME.custom.conf" ]; then
-  __custom_docker_env | sed 's|^--.*||g' | grep -Ev '^$|^#' >"$DOCKERMGR_CONFIG_DIR/env/$APPNAME.custom.conf"
+  __custom_docker_env | sed 's|^--.* ||g' >"$DOCKERMGR_CONFIG_DIR/env/$APPNAME.custom.conf"
+  echo "" >>"$DOCKERMGR_CONFIG_DIR/env/$APPNAME.custom.conf"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Main progam
