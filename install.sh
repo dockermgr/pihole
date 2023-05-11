@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202305111624-git
+##@Version           :  202305111951-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Thursday, May 11, 2023 16:24 EDT
+# @@Created          :  Thursday, May 11, 2023 19:51 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -27,7 +27,7 @@
 # shellcheck disable=SC2317
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202305111624-git"
+VERSION="202305111951-git"
 REPO_BRANCH="${GIT_REPO_BRANCH:-main}"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
@@ -312,8 +312,9 @@ HOST_NGINX_SSL_ENABLED="yes"
 HOST_NGINX_HTTP_PORT="80"
 HOST_NGINX_HTTPS_PORT="443"
 HOST_NGINX_UPDATE_CONF="yes"
-HOST_NGINX_INTERNAL_HOST="pihole"
+HOST_NGINX_EXTERNAL_DOMAIN=""
 HOST_NGINX_INTERNAL_DOMAIN="home"
+HOST_NGINX_INTERNAL_HOST=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Enable this if container is running a webserver - [yes/no] [internalPort] [yes/no] [yes/no] [listen]
 CONTAINER_WEB_SERVER_ENABLED="yes"
@@ -618,6 +619,13 @@ CONTAINER_DATABASE_PASS_NORMAL="${ENV_CONTAINER_DATABASE_PASS_NORMAL:-$CONTAINER
 EOF
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__create_uninstall() {
+  mkdir -p "$DOCKERMGR_CONFIG_DIR/uninstall"
+  cat <<EOF >"$DOCKERMGR_CONFIG_DIR/uninstall/$APPNAME"
+NGINX_FILES="$(__trim "$NGINX_CONF_FILE $NGINX_INC_CONFIG $NGINX_VHOST_CONFIG $NGINX_INTERNAL_IS_SET")"
+EOF
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define extra functions
 __custom_docker_clean_env() { grep -Ev '^$|^#' | sed 's|^|--env |g' | grep '\--' | grep -v '\--env \\' | tr '\n' ' ' | __remove_extra_spaces; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -741,7 +749,7 @@ fi
 # rewrite variables from env file
 SET_LAN_DEV="${ENV_SET_LAN_DEV:-$SET_LAN_DEV}"
 SET_LAN_IP="${ENV_SET_LAN_IP:-$SET_LAN_IP}"
-SET_LAN_IP="${ENV_SET_LAN_IP:-$SET_LAN_IP}"
+SET_LOCAL_IP="$(__my_default_lan_address)"
 SET_DOCKER_IP="${ENV_SET_DOCKER_IP:-$SET_DOCKER_IP}"
 SET_LOCAL_HOSTNAME="${ENV_SET_LOCAL_HOSTNAME:-$SET_LOCAL_HOSTNAME}"
 SET_LONG_HOSTNAME="${ENV_SET_LONG_HOSTNAME:-$SET_LONG_HOSTNAME}"
@@ -773,7 +781,7 @@ HOST_NGINX_SSL_ENABLED="${ENV_HOST_NGINX_SSL_ENABLED:-$HOST_NGINX_SSL_ENABLED}"
 HOST_NGINX_HTTP_PORT="${ENV_HOST_NGINX_HTTP_PORT:-$HOST_NGINX_HTTP_PORT}"
 HOST_NGINX_HTTPS_PORT="${ENV_HOST_NGINX_HTTPS_PORT:-$HOST_NGINX_HTTPS_PORT}"
 HOST_NGINX_UPDATE_CONF="${ENV_HOST_NGINX_UPDATE_CONF:-$HOST_NGINX_UPDATE_CONF}"
-HOST_NGINX_INTERNAL_HOST="${HOST_NGINX_INTERNAL_HOST:-$APPNAME}"
+HOST_NGINX_INTERNAL_HOST="${HOST_NGINX_INTERNAL_HOST:-${CONTAINER_HOSTNAME:-$APPNAME}}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CONTAINER_NAME="${ENV_CONTAINER_NAME:-${CONTAINER_NAME:-}}"
 CONTAINER_SSL_DIR="${ENV_CONTAINER_SSL_DIR:-$CONTAINER_SSL_DIR}"
@@ -866,6 +874,8 @@ CONTAINER_SSL_DIR="${CONTAINER_SSL_DIR:-/config/ssl}"
 CONTAINER_SSL_CA="${CONTAINER_SSL_CA:-$CONTAINER_SSL_DIR/ca.crt}"
 CONTAINER_SSL_CRT="${CONTAINER_SSL_CRT:-$CONTAINER_SSL_DIR/localhost.crt}"
 CONTAINER_SSL_KEY="${CONTAINER_SSL_KEY:-$CONTAINER_SSL_DIR/localhost.key}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+CONTAINER_DOMAINNAME="${HOST_NGINX_EXTERNAL_DOMAIN:-$CONTAINER_DOMAINNAME}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup ssl certs
 if [ "$CONTAINER_WEB_SERVER_SSL_ENABLED" = "true" ]; then
@@ -1097,11 +1107,11 @@ fi
 # Setup containers hostname
 if __is_server && [ -z "$CONTAINER_HOSTNAME" ]; then
   CONTAINER_DOMAINNAME="$SET_HOST_FULL_DOMAIN"
-  CONTAINER_HOSTNAME="$APPNAME.$SET_HOST_FULL_DOMAIN"
 else
   CONTAINER_DOMAINNAME="${CONTAINER_DOMAINNAME:-$SET_HOST_FULL_DOMAIN}"
-  CONTAINER_HOSTNAME="${CONTAINER_HOSTNAME:-$APPNAME.$SET_HOST_FULL_NAME}"
 fi
+CONTAINER_HOSTNAME="${CONTAINER_HOSTNAME:-${CONTAINER_NAME:-$APPNAME}}"
+echo "$CONTAINER_HOSTNAME" | grep -q "$CONTAINER_DOMAINNAME" || CONTAINER_HOSTNAME="$CONTAINER_HOSTNAME.$CONTAINER_DOMAINNAME"
 if [ -n "$CONTAINER_HOSTNAME" ]; then
   DOCKER_SET_OPTIONS+=("--hostname $CONTAINER_HOSTNAME")
   DOCKER_SET_OPTIONS+=("--env HOSTNAME=$CONTAINER_HOSTNAME")
@@ -1130,7 +1140,7 @@ fi
 DOCKER_CREATE_NET="$(__docker_net_create)"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Container listen address [address:extPort:intPort]
-HOST_DEFAULT_IP="$(__my_default_lan_address || __local_lan_ip)"
+HOST_DEFAULT_IP="${SET_LOCAL_IP:-$SET_LAN_IP}"
 HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR:-$SET_LAN_IP}"
 if [ "$HOST_NETWORK_ADDR" = "yes" ] || [ "$HOST_NETWORK_ADDR" = "lan" ]; then
   HOST_DEFINE_LISTEN="$SET_LAN_IP"
@@ -1152,7 +1162,7 @@ elif [ "$HOST_NETWORK_ADDR" = "local" ]; then
   CONTAINER_PRIVATE="yes"
 else
   HOST_DEFINE_LISTEN="0.0.0.0"
-  HOST_LISTEN_ADDR="$SET_LAN_IP"
+  HOST_LISTEN_ADDR="$HOST_DEFAULT_IP"
 fi
 HOST_DEFINE_LISTEN="${HOST_DEFINE_LISTEN:-0.0.0.0}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1981,7 +1991,7 @@ if [ -n "$EXECUTE_DOCKER_SCRIPT" ]; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Install nginx proxy
-NINGX_VHOSTS_WRITABLE="$(sudo -n true && sudo bash -c 'mkdir -p "$NGINX_DIR/vhosts.d";[ -w "$NGINX_DIR/vhosts.d" ] && echo "true" || false' || echo 'false')"
+NINGX_VHOSTS_WRITABLE="$(sudo -n true && NGINX_DIR="$NGINX_DIR" sudo bash -c 'mkdir -p "$NGINX_DIR/vhosts.d";[ -w "$NGINX_DIR/vhosts.d" ] && echo "true" || false' || echo 'false')"
 if [ "$NINGX_VHOSTS_WRITABLE" = "true" ]; then
   NGINX_VHOST_TMP_NAMES=()
   NGINX_VHOST_ENABLED="true"
@@ -2025,7 +2035,6 @@ if [ "$NINGX_VHOSTS_WRITABLE" = "true" ]; then
       NGINX_VHOST_NAMES="${NGINX_VHOST_NAMES:-}"
     fi
     cp -f "$INSTDIR/nginx/proxy.conf" "$NGINX_VHOSTS_CONF_FILE_TMP"
-    [ -n "$NGINX_PROXY_URL" ] && [ -n "$NGINX_PORT" ] && NGINX_SET_PROXY_ADDRESS="$NGINX_PROXY_URL:$NGINX_PORT" || unset NGINX_SET_PROXY_ADDRESS
     sed -i "s|REPLACE_APPNAME|$APPNAME|g" "$NGINX_VHOSTS_CONF_FILE_TMP" &>/dev/null
     sed -i "s|REPLACE_NGINX_PORT|$NGINX_PORT|g" "$NGINX_VHOSTS_CONF_FILE_TMP" &>/dev/null
     sed -i "s|REPLACE_HOST_PROXY|$NGINX_PROXY_URL|g" "$NGINX_VHOSTS_CONF_FILE_TMP" &>/dev/null
@@ -2061,14 +2070,16 @@ if [ "$NINGX_VHOSTS_WRITABLE" = "true" ]; then
   else
     NGINX_PROXY_URL=""
   fi
+  [ -n "$NGINX_PROXY_URL" ] && NGNIX_REVERSE_ADDRESS="$NGINX_PROXY_URL"
   [ -f "$NGINX_MAIN_CONFIG" ] && NGINX_PROXY_URL="$CONTAINER_PROTOCOL://$CONTAINER_HOSTNAME"
 fi
 { [ "$NGINX_VHOST_NAMES" = "" ] || [ "$NGINX_VHOST_NAMES" = " " ]; } && unset NGINX_VHOST_NAMES
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup an internal host
-if [ -n "$NGINX_SET_PROXY_ADDRESS" ] && [ -n "$HOST_NGINX_INTERNAL_DOMAIN" ]; then
+NGINX_VHOSTS_PROXY_INT_TMP="/tmp/$$.$HOST_NGINX_INTERNAL_HOST.$HOST_NGINX_INTERNAL_DOMAIN"
+if [ -n "$NGNIX_REVERSE_ADDRESS" ] && [ -n "$HOST_NGINX_INTERNAL_DOMAIN" ]; then
   HOST_NGINX_INTERNAL_DOMAIN="$HOST_NGINX_INTERNAL_HOST.$HOST_NGINX_INTERNAL_DOMAIN"
-  cat <<EOF | tee "$NGINX_VHOSTS_PROXY_FILE_TMP" &>/dev/null
+  cat <<EOF | tee "$NGINX_VHOSTS_PROXY_INT_TMP" &>/dev/null
 server {
   listen                                    $HOST_NGINX_HTTP_PORT;
   listen                                    [::]:$HOST_NGINX_HTTP_PORT;
@@ -2083,7 +2094,7 @@ server {
   include                                   /etc/nginx/global.d/nginx-defaults.conf;
 
   location / {
-    proxy_pass                              http://$NGINX_SET_PROXY_ADDRESS;
+    proxy_pass                              $NGNIX_REVERSE_ADDRESS;
     proxy_http_version                      1.1;
     proxy_connect_timeout                   3600;
     proxy_send_timeout                      3600;
@@ -2099,15 +2110,17 @@ server {
 }
 
 EOF
-  if [ -f "$NGINX_VHOSTS_INC_FILE_TMP" ]; then
+  if [ -f "$NGINX_VHOSTS_PROXY_INT_TMP" ]; then
     if [ -f "/etc/nginx/nginx.conf" ]; then
-      __sudo_root mv -f "$NGINX_VHOSTS_INC_FILE_TMP" "$NGINX_DIR/vhosts.d/$HOST_NGINX_INTERNAL_DOMAIN.conf"
+      [ -d "$NGINX_DIR/vhosts.d" ] || __sudo_root mkdir -p "$NGINX_DIR/vhosts.d"
+      __sudo_root mv -f "$NGINX_VHOSTS_PROXY_INT_TMP" "$NGINX_DIR/vhosts.d/$HOST_NGINX_INTERNAL_DOMAIN.conf"
       systemctl status nginx 2>/dev/null | grep -q enabled &>/dev/null && __sudo_root systemctl reload nginx &>/dev/null
     else
-      mv -f "$NGINX_VHOSTS_CONF_FILE_TMP" "$INSTDIR/nginx/$HOST_NGINX_INTERNAL_DOMAIN.conf" &>/dev/null
+      mv -f "$NGINX_VHOSTS_PROXY_INT_TMP" "$NGINX_DIR/vhosts.d/$HOST_NGINX_INTERNAL_DOMAIN.conf" &>/dev/null
     fi
   fi
   NGINX_VHOST_NAMES="$NGINX_VHOST_NAMES $HOST_NGINX_INTERNAL_DOMAIN"
+  [ -f "$NGINX_DIR/vhosts.d/$HOST_NGINX_INTERNAL_DOMAIN.conf" ] && NGINX_INTERNAL_IS_SET="$NGINX_DIR/vhosts.d/$HOST_NGINX_INTERNAL_DOMAIN.conf"
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # finalize
@@ -2127,7 +2140,7 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps_all -q; then
     if ! grep -sq " $CONTAINER_HOSTNAME" "/etc/hosts"; then
       echo "$HOST_LISTEN_ADDR        $CONTAINER_HOSTNAME" | sudo tee -a "/etc/hosts" &>/dev/null
     fi
-    show_hosts_messge_banner="true"
+    show_hosts_message_banner="true"
     if [ -n "$NGINX_VHOST_NAMES" ]; then
       NGINX_VHOST_NAMES="${NGINX_VHOST_NAMES//,/ }"
       for vhost in $NGINX_VHOST_NAMES; do
@@ -2138,10 +2151,10 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps_all -q; then
           fi
         fi
       done
-      show_hosts_messge_banner="true"
+      show_hosts_message_banner="true"
     fi
-    [ "$show_hosts_messge_banner" = "true" ] && printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
-    unset show_hosts_messge_banner
+    [ "$show_hosts_message_banner" = "true" ] && printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
+    unset show_hosts_message_banner
   fi
   printf_yellow "The container name is:                  $CONTAINER_NAME"
   printf_yellow "Containers data is saved in:            $DATADIR"
@@ -2185,6 +2198,9 @@ if [ "$CONTAINER_INSTALLED" = "true" ] || __docker_ps_all -q; then
     fi
     if [ -f "$NGINX_VHOST_CONFIG" ]; then
       printf_cyan "nginx custom vhost file installed to:   $NGINX_VHOST_CONFIG"
+    fi
+    if [ -n "$NGINX_INTERNAL_IS_SET" ]; then
+      printf_cyan "nginx internal vhost file installed to: $NGINX_INTERNAL_IS_SET"
     fi
     printf '# - - - - - - - - - - - - - - - - - - - - - - - - - -\n'
   fi
@@ -2329,6 +2345,8 @@ fi
 if [ "$USER" != "root" ] && [ -n "$USER" ]; then
   __sudo_exec chown -f "$USER":"$USER" "$DATADIR" "$INSTDIR" &>/dev/null
 fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__create_uninstall
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # run post install scripts
 run_postinst() {
