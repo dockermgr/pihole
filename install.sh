@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202305111604-git
+##@Version           :  202305111624-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.com
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Thursday, May 11, 2023 16:04 EDT
+# @@Created          :  Thursday, May 11, 2023 16:24 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -27,7 +27,7 @@
 # shellcheck disable=SC2317
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 APPNAME="pihole"
-VERSION="202305111604-git"
+VERSION="202305111624-git"
 REPO_BRANCH="${GIT_REPO_BRANCH:-main}"
 HOME="${USER_HOME:-$HOME}"
 USER="${SUDO_USER:-$USER}"
@@ -1130,6 +1130,7 @@ fi
 DOCKER_CREATE_NET="$(__docker_net_create)"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Container listen address [address:extPort:intPort]
+HOST_DEFAULT_IP="$(__my_default_lan_address || __local_lan_ip)"
 HOST_LISTEN_ADDR="${HOST_LISTEN_ADDR:-$SET_LAN_IP}"
 if [ "$HOST_NETWORK_ADDR" = "yes" ] || [ "$HOST_NETWORK_ADDR" = "lan" ]; then
   HOST_DEFINE_LISTEN="$SET_LAN_IP"
@@ -1139,8 +1140,8 @@ elif [ "$HOST_NETWORK_ADDR" = "public" ]; then
     HOST_DEFINE_LISTEN="0.0.0.0"
     HOST_LISTEN_ADDR=$(__public_ip)
   else
-    HOST_DEFINE_LISTEN="$SET_LAN_IP"
-    HOST_LISTEN_ADDR="$SET_LAN_IP"
+    HOST_DEFINE_LISTEN="$HOST_DEFAULT_IP"
+    HOST_LISTEN_ADDR="$HOST_DEFAULT_IP"
   fi
 elif [ "$HOST_NETWORK_ADDR" = "docker" ]; then
   HOST_DEFINE_LISTEN="$SET_DOCKER_IP"
