@@ -429,7 +429,7 @@ CONTAINER_WEB_SERVER_VHOSTS="pihole.all"
 CONTAINER_ADD_RANDOM_PORTS=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add custom port -  [exter:inter] or [.all:exter:inter/[tcp,udp] [listen:exter:inter/[tcp,udp]] random:[inter]
-CONTAINER_ADD_CUSTOM_PORT="53:53/tcp,53:53/udp"
+CONTAINER_ADD_CUSTOM_PORT=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Create a single port mapping [listen]:[externalPort/random]:[internalPort]
 CONTAINER_ADD_CUSTOM_SINGLE=""
@@ -443,7 +443,7 @@ CONTAINER_EMAIL_RELAY_PORT="587"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Easy setup for services - [no/yes]
 CONTAINER_SERVICE_PUBLIC="yes"
-CONTAINER_IS_DNS_SERVER="no"
+CONTAINER_IS_DNS_SERVER="yes"
 CONTAINER_IS_DHCP_SERVER="no"
 CONTAINER_IS_TFTP_SERVER="no"
 CONTAINER_IS_SMTP_SERVER="no"
