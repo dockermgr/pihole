@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202410011648-git
+##@Version           :  202410081855-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.pro
 # @@License          :  LICENSE.md
 # @@ReadME           :  install.sh --help
 # @@Copyright        :  Copyright: (c) 2024 Jason Hempstead, Casjays Developments
-# @@Created          :  Tuesday, Oct 01, 2024 16:48 EDT
+# @@Created          :  Tuesday, Oct 08, 2024 18:55 EDT
 # @@File             :  install.sh
 # @@Description      :  Container installer script for pihole
 # @@Changelog        :  New script
@@ -29,7 +29,7 @@
 # shellcheck disable=SC2317
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 export APPNAME="pihole"
-export VERSION="202410011648-git"
+export VERSION="202410081855-git"
 export REPO_BRANCH="${GIT_REPO_BRANCH:-main}"
 export USER="${SUDO_USER:-$USER}"
 export RUN_USER="${RUN_USER:-$USER}"
@@ -147,9 +147,9 @@ __printf_spacing_color() { __printf_space "$1" "40" "$2" "$3"; }
 __printf_color() { printf "%b" "$(tput setaf "$1" 2>/dev/null)" "$2" "$(tput sgr0 2>/dev/null)" && printf '\n'; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __cmd_exists() { type -p $1 &>/dev/null || return 1; }
-__remove_extra_spaces() { sed 's/\( \)*/\1/g;s|^ ||g'; }
 __grep_char() { grep '[a-zA-Z0-9].[a-zA-Z0-9]' | grep '^' || return 1; }
 __docker_check() { [ -n "$(type -p docker 2>/dev/null)" ] || return 1; }
+__remove_extra_spaces() { sed 's/\( \)*/\1/g;s|^ ||g' | sed 's/^[ \t]*//'; }
 __set_vhost_alias() { echo "$1" | __remove_extra_spaces | grep "$2$" | sed "s|$2$|$3|g"; }
 __docker_ps_all() { docker ps -a 2>&1 | grep -i ${1:-} "$CONTAINER_NAME" && return 0 || return 1; }
 __password() { head -n1000 -c 10000 "/dev/urandom" | tr -dc '0-9a-zA-Z' | head -c${1:-16} && echo ""; }
@@ -162,6 +162,9 @@ __container_is_running() { docker ps 2>&1 | grep -i "$CONTAINER_NAME" | grep -qi
 __docker_init() { [ -n "$(type -p dockermgr 2>/dev/null)" ] && dockermgr init || printf_exit "Failed to Initialize the docker installer"; }
 __netstat() { netstat -taupln 2>/dev/null | grep -vE 'WAIT|ESTABLISHED|docker-pro' | awk -F ' ' '{print $4}' | sed 's|.*:||g' | grep -E '[0-9]' | sort -Vu | grep "^${1:-.*}$" || return 1; }
 __retrieve_custom_env() { [ -f "$DOCKERMGR_CONFIG_DIR/env/$CONTAINER_NAME.${1:-custom}.conf" ] && cat "$DOCKERMGR_CONFIG_DIR/env/$CONTAINER_NAME.${1:-custom}.conf" | grep -Ev '^$|^#' | grep '=' | grep '^' || __custom_docker_env | grep -Ev '^$|^#' | grep '=' | grep '^' || return 1; }
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__get_user_id() { grep -s "^$1:" /etc/passwd | awk -F: '{print $3}' | grep '^[0-9]' || echo "$(id -u)"; }
+__get_group_id() { grep -s "^$1:" /etc/group | awk -F: '{print $3}' | grep '^[0-9]' || echo "$(id -g)"; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __get_proxy_url() { echo "${1//\/*{/}" | grep -q '[0-9]:.*:[0-9]' && echo "${1%:*}" || echo "$1"; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -202,6 +205,11 @@ __hash_password() { __cmd_exists htpasswd && htpasswd -bnBC 10 "" "$1" | tr -d '
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define any pre-install scripts
 __run_pre_install() {
+
+  return 0
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__pre_docker_install_commands() {
 
   return 0
 }
@@ -288,6 +296,12 @@ CONTAINER_WORK_DIR=""
 USER_ID_ENABLED="no"
 CONTAINER_USER_ID=""
 CONTAINER_GROUP_ID=""
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Set user to docker run --user [userName]
+DOCKER_ADD_USER=""
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Set group to docker run --group-add [groupName]
+DOCKER_ADD_GROUP=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set runas user - default root - [mysql]
 CONTAINER_USER_RUN=""
@@ -493,19 +507,19 @@ HOST_MOUNT_DATABASE_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set a username and password - [user] [pass/random]
 CONTAINER_USER_NAME=""
-CONTAINER_USER_PASS=""
+CONTAINER_USER_PASS="random"
 CONTAINER_PASS_LENGTH="24"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set container username and password enviroment name - [CONTAINER_ENV_USER_NAME=$CONTAINER_USER_NAME] [CONTAINER_ENV_PASS_NAME=$CONTAINER_USER_PASS]
 CONTAINER_ENV_USER_NAME=""
-CONTAINER_ENV_PASS_NAME=""
+CONTAINER_ENV_PASS_NAME="WEBPASSWORD"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # If container has an api token set it here - [ENV_NAME] [token/random]
 CONTAINER_API_KEY_NAME=""
 CONTAINER_API_KEY_TOKEN="random"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # If container has an secret key set it here - [ENV_NAME] [token/random]
-CONTAINER_SECRET_KEY_NAME="WEBPASSWORD"
+CONTAINER_SECRET_KEY_NAME=""
 CONTAINER_SECRET_KEY_TOKEN="random"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # If container has an admin password that needs to be hashed then set it here - [pass/random]
@@ -523,7 +537,7 @@ CONTAINER_MOUNT_DATA_MOUNT_DIR=""
 CONTAINER_MOUNT_CONFIG_ENABLED="yes"
 CONTAINER_MOUNT_CONFIG_MOUNT_DIR=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Define additional mounts - [/dir:/dir,/otherdir:/otherdir]
+# Define additional mounts - add HOST/ to use $DATA_DIR/rootfs - [/dir:/dir,/otherdir:/otherdir]
 CONTAINER_MOUNTS=""
 CONTAINER_MOUNTS+=""
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -549,11 +563,11 @@ DOCKER_CUSTOM_CAP=""
 DOCKER_CAP_SYS_TIME="yes"
 DOCKER_CAP_SYS_ADMIN="yes"
 DOCKER_CAP_CHOWN="yes"
-DOCKER_CAP_NET_RAW="no"
-DOCKER_CAP_SYS_NICE="no"
-DOCKER_CAP_NET_ADMIN="no"
-DOCKER_CAP_SYS_MODULE="no"
-DOCKER_CAP_NET_BIND_SERVICE="no"
+DOCKER_CAP_NET_RAW="yes"
+DOCKER_CAP_SYS_NICE="yes"
+DOCKER_CAP_NET_ADMIN="yes"
+DOCKER_CAP_SYS_MODULE="yes"
+DOCKER_CAP_NET_BIND_SERVICE="yes"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define labels - [traefik.enable=true,label=label,otherlabel=label2]
 CONTAINER_LABELS=""
@@ -625,7 +639,7 @@ DNSMASQ_LISTENING=all
 WEBTHEME=default-dark
 VIRTUAL_HOST=${CONTAINER_HOSTNAME:-$HOSTNAME}
 PROXY_LOCATION=${CONTAINER_HOSTNAME:-$HOSTNAME}
-PIHOLE_DOMAIN=${CONTAINER_HOSTNAME:-$HOSTNAME}
+PIHOLE_DOMAIN=${CONTAINER_DOMAINNAME:-$HOSTNAME}
 
 EOF
 }
@@ -698,6 +712,8 @@ ENV_CONTAINER_WORK_DIR="\${ENV_CONTAINER_WORK_DIR:-$CONTAINER_WORK_DIR}"
 ENV_USER_ID_ENABLED="\${ENV_USER_ID_ENABLED:-$USER_ID_ENABLED}"
 ENV_CONTAINER_USER_ID="\${ENV_CONTAINER_USER_ID:-$CONTAINER_USER_ID}"
 ENV_CONTAINER_GROUP_ID="\${ENV_CONTAINER_GROUP_ID:-$CONTAINER_GROUP_ID}"
+ENV_DOCKER_ADD_USER="\${ENV_DOCKER_ADD_USER:-$DOCKER_ADD_USER}}"
+ENV_DOCKER_ADD_GROUP="\${ENV_DOCKER_ADD_GROUP:-$DOCKER_ADD_GROUP}}"
 ENV_CONTAINER_USER_RUN="\${ENV_CONTAINER_USER_RUN:-$CONTAINER_USER_RUN}"
 ENV_CONTAINER_PRIVILEGED_ENABLED="\${ENV_CONTAINER_PRIVILEGED_ENABLED:-$CONTAINER_PRIVILEGED_ENABLED}"
 ENV_CONTAINER_SHM_SIZE="\${ENV_CONTAINER_SHM_SIZE:-$CONTAINER_SHM_SIZE}"
@@ -1152,6 +1168,8 @@ CONTAINER_WORK_DIR="${ENV_CONTAINER_WORK_DIR:-$CONTAINER_WORK_DIR}"
 USER_ID_ENABLED="${ENV_USER_ID_ENABLED:-$USER_ID_ENABLED}"
 CONTAINER_USER_ID="${ENV_CONTAINER_USER_ID:-$CONTAINER_USER_ID}"
 CONTAINER_GROUP_ID="${ENV_CONTAINER_GROUP_ID:-$CONTAINER_GROUP_ID}"
+DOCKER_ADD_USER="${ENV_DOCKER_ADD_USER:-$DOCKER_ADD_USER}}"
+DOCKER_ADD_GROUP="${ENV_DOCKER_ADD_GROUP:-$DOCKER_ADD_GROUP}}"
 CONTAINER_USER_RUN="${ENV_CONTAINER_USER_RUN:-$CONTAINER_USER_RUN}"
 CONTAINER_PRIVILEGED_ENABLED="${ENV_CONTAINER_PRIVILEGED_ENABLED:-$CONTAINER_PRIVILEGED_ENABLED}"
 CONTAINER_SHM_SIZE="${ENV_CONTAINER_SHM_SIZE:-$CONTAINER_SHM_SIZE}"
@@ -1364,15 +1382,23 @@ fi
 # Set user ID
 if [ "$USER_ID_ENABLED" = "yes" ]; then
   if [ -z "$CONTAINER_USER_ID" ]; then
-    DOCKER_SET_OPTIONS_ENV+=("--env PUID=$(id -u)")
-  else
-    DOCKER_SET_OPTIONS_ENV+=("--env PUID=$CONTAINER_USER_ID")
+    CONTAINER_USER_ID="$(__get_user_id "$USER")"
   fi
   if [ -z "$CONTAINER_GROUP_ID" ]; then
-    DOCKER_SET_OPTIONS_ENV+=("--env PGID=$(id -g)")
-  else
-    DOCKER_SET_OPTIONS_ENV+=("--env PGID=$CONTAINER_GROUP_ID")
+    CONTAINER_GROUP_ID="$(__get_group_id $USER)"
   fi
+  DOCKER_SET_OPTIONS_ENV+=("--env PUID=$CONTAINER_USER_ID")
+  DOCKER_SET_OPTIONS_ENV+=("--env PGID=$CONTAINER_GROUP_ID")
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ -n "$DOCKER_ADD_USER" ]; then
+  DOCKER_ADD_USER="$(__get_user_id "$DOCKER_ADD_USER")"
+  DOCKER_SET_OPTIONS_DEFAULT+=("--user $DOCKER_ADD_USER")
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ -n "$DOCKER_ADD_GROUP" ]; then
+  DOCKER_ADD_GROUP="$(__get_group_id "$DOCKER_ADD_GROUP")"
+  DOCKER_SET_OPTIONS_DEFAULT+=("--group-add $DOCKER_ADD_GROUP")
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set the process owner
@@ -2065,11 +2091,17 @@ if [ -n "$CONTAINER_MOUNTS" ]; then
   CONTAINER_MOUNTS="${CONTAINER_MOUNTS//,/ }"
   for mnt in $CONTAINER_MOUNTS; do
     if [ "$mnt" != "" ] && [ "$mnt" != " " ]; then
+      if echo "$mnt" | grep -q '^HOST/'; then
+        mnt="${mnt//HOST\//}"
+        host_mnt="${mnt//:*/}"
+        cont_mnt="${mnt//*:/}"
+        [ -n "$cont_mnt" ] && mnt="$HOST_ROOTFS_DIR/$host_mnt:$cont_mnt" || mnt="$HOST_ROOTFS_DIR/$host_mnt:$host_mnt"
+      fi
       echo "$mnt" | grep -q ':' || mnt="$mnt:$mnt"
       DOCKER_SET_MNT+="--volume $mnt "
     fi
   done
-  unset mnt
+  unset mnt host_mnt cont_mnt
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if [ -n "$CONTAINER_OPT_MOUNT_VAR" ]; then
@@ -2566,6 +2598,7 @@ if [ -x "$DOCKERMGR_INSTALL_SCRIPT" ]; then
   fi
   exit $exitCode
 else
+  __pre_docker_install_commands
   __create_docker_script
   EXECUTE_DOCKER_SCRIPT="$EXECUTE_DOCKER_CMD"
   if [ "$INIT_SCRIPT_ONLY" = "no" ] && [ -n "$EXECUTE_DOCKER_SCRIPT" ]; then
